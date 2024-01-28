@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace SkyrimModVerification
 {
-    public static class DataProcessing
+	public static class DataProcessing
 	{
 
 		/// <summary>
@@ -82,6 +82,45 @@ namespace SkyrimModVerification
 		}
 
 		/// <summary>
+		/// Get a list of the files in the destination directory with full path info
+		/// </summary>
+		/// <param name="info"></param>
+		/// <returns></returns>
+		public static IEnumerable<string> GetDirectoryFileList(IInfo info)
+		{
+			try
+			{
+				var dir = Directory.EnumerateFiles(info.DeployDestination, "", SearchOption.AllDirectories) ?? new List<string>();
+				return dir.OrderBy(x => x);
+			}
+			catch
+			{
+				Console.WriteLine($"*** Something went wrong trying to read from the file directory {info.DeployDestination}");
+				return new List<string>();
+			}
+		}
+
+		/// <summary>
+		/// Get a list of which files in sourceList are missing from destinationList
+		/// </summary>
+		/// <param name="info"></param>
+		/// <param name="sourceList"></param>
+		/// <param name="destinationList"></param>
+		/// <returns></returns>
+		public static IEnumerable<string> GetMissingSourceFiles(IInfo info, IEnumerable<string> sourceList, IEnumerable<string> destinationList)
+		{
+			var dest = TransformList(destinationList, info.DeployDestination);
+
+			var missingList = new List<string>();
+			foreach (var file in sourceList)
+			{
+				var contents = TransformList(GetCompressedFileContent(file), info.CompressedSource);
+				missingList.AddRange(contents.Where(x => !dest.Contains(x)));
+			}
+			return missingList;
+		}
+
+		/// <summary>
 		/// Validate Source and Destination values are not empty
 		/// </summary>
 		/// <param name="info"></param>
@@ -98,7 +137,9 @@ namespace SkyrimModVerification
 		/// <returns></returns>
 		public static string ReadPathInfo(string jsonPath = "ConfigLocations.json")
 		{
-			if (!string.IsNullOrWhiteSpace(jsonPath)) try
+			if (!string.IsNullOrWhiteSpace(jsonPath))
+			{
+				try
 				{
 					var path = Path.Combine(Environment.CurrentDirectory, jsonPath);
 					using var jsonStream = new StreamReader(path);
@@ -111,7 +152,20 @@ namespace SkyrimModVerification
 					Console.WriteLine($"*** Something went wrong trying to read the json configuration file.");
 					return "";
 				}
+			}
+
 			return "";
+		}
+
+		/// <summary>
+		/// Removes the text of removeVal from each item in list
+		/// </summary>
+		/// <param name="list"></param>
+		/// <param name="removeVal"></param>
+		/// <returns></returns>
+		public static IEnumerable<string> TransformList(IEnumerable<string> list, string removeVal)
+		{
+			return list.Select(y => y.Replace(removeVal, ""));
 		}
 	}
 }

@@ -32,7 +32,7 @@ namespace SkyrimModUnitTest
 		[DataRow("TestZip.zip")]
 		[DataRow("TestSevenZip.7z")]
 		[DataRow("TestRar.rar")]
-		public void A_GetCompressionFactory_CorrectType(string type)
+		public void A_GetCompressionFactory_Correct_Type(string type)
 		{
 			var result = CompressionFactory.GetCompressionType(type);
 
@@ -54,18 +54,19 @@ namespace SkyrimModUnitTest
 			}
 		}
 
-		[TestMethod]
-		public void B_GetCompressedFileContent_Invalid_NotNull()
-		{
-			var result = DataProcessing.GetCompressedFileContent(TestData.InvalidCompressedZip);
-
-			Assert.IsNotNull(result);
-		}
 
 		[TestMethod]
 		public void B_GetCompressedFileContent_Not_Null()
 		{
 			var result = DataProcessing.GetCompressedFileContent(TestData.ValidCompressedFile);
+
+			Assert.IsNotNull(result);
+		}
+
+		[TestMethod]
+		public void B_GetCompressedFileContent_Invalid_NotNull()
+		{
+			var result = DataProcessing.GetCompressedFileContent(TestData.InvalidCompressedZip);
 
 			Assert.IsNotNull(result);
 		}

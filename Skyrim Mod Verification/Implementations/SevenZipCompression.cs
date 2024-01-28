@@ -1,4 +1,4 @@
-﻿using Aspose.Zip.SevenZip;
+﻿using SharpCompress.Archives;
 
 namespace SkyrimModVerification
 {
@@ -29,16 +29,17 @@ namespace SkyrimModVerification
 		{
 			try
 			{
-				using var compressedData = new SevenZipArchive(filePath);
+				using var compressedData = ArchiveFactory.Open(filePath);
 				var fileList = new List<string>();
 				foreach (var file in compressedData.Entries)
 				{
-					fileList.Add(file.Name);
+					fileList.Add(file.Key);
 				}
 				return fileList;
 			}
 			catch
 			{
+				Console.WriteLine($"*** Invalid Compressed Archive [{filePath}], unable to retrieve contents ");
 				return new List<string>();
 			}
 		}

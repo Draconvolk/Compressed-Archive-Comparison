@@ -29,5 +29,49 @@ namespace SkyrimModUnitTest
 		public static readonly string InvalidCompressed7z = Path.Combine(ValidPath, "badtest.7z");
 		public static readonly string InvalidCompressedRar = Path.Combine(ValidPath, "badtest.rar");
 		public static readonly string InvalidCompressedZip = Path.Combine(ValidPath, "badtest.zip");
+
+		public static readonly string ValidDir = Path.Combine(ValidPath, "TestDir1");
+
+		public static readonly IInfo TestDirInfo = new FolderLocationInfo()
+		{
+			CompressedSource = ValidDir,
+			DeployDestination = ValidDir
+		};
+
+		public static readonly List<string> ValidSourceList = [
+			"Source\\TestDir1\\TestFile1.txt",
+			"Source\\TestDir1\\TestFile2.txt",
+			"Source\\TestDir1\\NestedDir1\\TestFile3.txt",
+			"Source\\TestDir1\\NestedDir1\\TestFile4.txt",
+			"Source\\TestDir1\\NestedDir1\\TestFile5.txt",
+			"Source\\TestDir1\\NestedDir2\\TestFile6.txt"
+		];
+		public static readonly List<string> ExpectedResultList = [
+			"TestDir1\\TestFile1.txt",
+			"TestDir1\\TestFile2.txt",
+			"TestDir1\\NestedDir1\\TestFile3.txt",
+			"TestDir1\\NestedDir1\\TestFile4.txt",
+			"TestDir1\\NestedDir1\\TestFile5.txt",
+			"TestDir1\\NestedDir2\\TestFile6.txt"
+		];
+
+		public static readonly List<string> FullPathResultList = [
+			$"{ValidDir}TestDir1\\TestFile1.txt",
+			$"{ValidDir}TestDir1\\TestFile2.txt",
+			$"{ValidDir}TestDir1\\NestedDir1\\TestFile3.txt",
+			$"{ValidDir}TestDir1\\NestedDir1\\TestFile4.txt",
+			$"{ValidDir}TestDir1\\NestedDir1\\TestFile5.txt",
+			$"{ValidDir}TestDir1\\NestedDir2\\TestFile6.txt"
+		];
+		public static readonly List<string> FullPathSourcetList = [
+			$"{ValidPath}\\TestRar.rar",
+			$"{ValidPath}\\TestSevenZip.7z"
+		];
+		public static readonly IInfo FullPathFolderInfo = new FolderLocationInfo()
+		{
+			CompressedSource = ValidPath,
+			DeployDestination = ValidDir
+		};
+		public static readonly string SourceToRemove = "Source\\";
 	}
 }

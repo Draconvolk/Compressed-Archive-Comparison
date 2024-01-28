@@ -15,7 +15,7 @@
 		{
 			if (string.IsNullOrWhiteSpace(fileName) || fileName.LastIndexOf('.') == -1)
 			{
-				Console.WriteLine($"Error Getting Compression Type, filename invalid: {fileName}");
+				Console.WriteLine($"*** Error Getting Compression Type, filename invalid: {fileName}");
 				return null;
 			}
 

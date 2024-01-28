@@ -1,5 +1,4 @@
-﻿using Aspose.Zip.Rar;
-using System.IO.Compression;
+﻿using SharpCompress.Archives;
 
 namespace SkyrimModVerification
 {
@@ -26,20 +25,21 @@ namespace SkyrimModVerification
 			}
 		}
 
-		public IEnumerable<string> GetFiles(string filePath = "")
+		public IEnumerable<string> GetFiles(string filePath)
 		{
 			try
 			{
-				using var compressedData = new RarArchive(filePath);
+				using var compressedData = ArchiveFactory.Open(filePath);
 				var fileList = new List<string>();
 				foreach (var file in compressedData.Entries)
 				{
-					fileList.Add(file.Name);
+					fileList.Add(file.Key);
 				}
 				return fileList;
 			}
 			catch
 			{
+				Console.WriteLine($"*** Invalid Compressed Archive [{filePath}], unable to retrieve contents ");
 				return new List<string>();
 			}
 
