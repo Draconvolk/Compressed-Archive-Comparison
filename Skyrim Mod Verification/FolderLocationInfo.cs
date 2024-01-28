@@ -1,8 +1,14 @@
 ﻿namespace Skyrim_Mod_Verification
 {
-	public class FolderLocationInfo
+	public class FolderLocationInfo : IInfo
 	{
-		public required string CompressedSource { get; set; }
-		public required string DeployDestination { get; set; }
+		public FolderLocationInfo()
+		{
+			CompressedSource = "";
+			DeployDestination = "";
+		}
+
+		public string CompressedSource { get; set; }
+		public string DeployDestination { get; set; }
 	}
 }
