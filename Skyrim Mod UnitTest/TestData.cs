@@ -1,6 +1,6 @@
-﻿using Skyrim_Mod_Verification;
+﻿using SkyrimModVerification;
 
-namespace Skyrim_Mod_UnitTest
+namespace SkyrimModUnitTest
 {
 	public static class TestData
 	{
@@ -20,6 +20,14 @@ namespace Skyrim_Mod_UnitTest
 			CompressedSource = @"C:\Games\Unknown Folder",
 			DeployDestination = @"C:\Games\Second Unknown Folder"
 		};
-		public static readonly string ValidCompressedFile = "";
+
+		public static readonly string ValidPath = Environment.CurrentDirectory;
+		public static readonly string ValidCompressedFile = Path.Combine(ValidPath, "TestZip.zip");
+		public static readonly string ValidCompressedFileZip = Path.Combine(ValidPath, "TestZip.zip");
+		public static readonly string ValidCompressedFile7z = Path.Combine(ValidPath, "TestSevenZip.7z");
+		public static readonly string ValidCompressedFileRar = Path.Combine(ValidPath, "TestRar.rar");
+		public static readonly string InvalidCompressed7z = Path.Combine(ValidPath, "badtest.7z");
+		public static readonly string InvalidCompressedRar = Path.Combine(ValidPath, "badtest.rar");
+		public static readonly string InvalidCompressedZip = Path.Combine(ValidPath, "badtest.zip");
 	}
 }

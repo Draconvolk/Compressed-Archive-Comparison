@@ -1,4 +1,4 @@
-﻿namespace Skyrim_Mod_Verification
+﻿namespace SkyrimModVerification
 {
 	public interface IInfo
 	{

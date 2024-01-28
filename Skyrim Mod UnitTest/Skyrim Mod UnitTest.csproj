@@ -21,4 +21,16 @@
     <ProjectReference Include="..\Skyrim Mod Verification\Skyrim Mod Verification.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TestRar.rar">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestSevenZip.7z">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestZip.zip">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

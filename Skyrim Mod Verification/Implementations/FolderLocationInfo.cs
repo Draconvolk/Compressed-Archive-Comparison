@@ -1,6 +1,7 @@
-﻿namespace Skyrim_Mod_Verification
+﻿
+namespace SkyrimModVerification
 {
-	public class FolderLocationInfo : IInfo
+    public class FolderLocationInfo : IInfo
 	{
 		public FolderLocationInfo()
 		{

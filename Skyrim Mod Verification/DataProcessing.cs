@@ -1,9 +1,9 @@
 ﻿using System.IO.Compression;
 using System.Text.Json;
 
-namespace Skyrim_Mod_Verification
+namespace SkyrimModVerification
 {
-	public static class DataProcessing
+    public static class DataProcessing
 	{
 
 		/// <summary>
@@ -39,11 +39,11 @@ namespace Skyrim_Mod_Verification
 			{
 				try
 				{
-					using var compressedData = ZipFile.OpenRead(filePath);
+					var compression = CompressionFactory.GetCompressionType(filePath) ?? throw new Exception();
 					var fileList = new List<string>();
-					foreach (var file in compressedData.Entries)
+					foreach (var file in compression.GetFiles())
 					{
-						fileList.Add(file.FullName);
+						fileList.Add(file);
 					}
 					return fileList;
 				}
