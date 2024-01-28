@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33712.159
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skyrim Mod Verification", "Skyrim Mod Verification\Skyrim Mod Verification.csproj", "{4FC44513-8F7A-4E45-B324-BAEA0C395E11}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skyrim Mod UnitTest", "Skyrim Mod UnitTest\Skyrim Mod UnitTest.csproj", "{290F28FE-1C4F-4AB9-8D28-FF6C91227399}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4FC44513-8F7A-4E45-B324-BAEA0C395E11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FC44513-8F7A-4E45-B324-BAEA0C395E11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FC44513-8F7A-4E45-B324-BAEA0C395E11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FC44513-8F7A-4E45-B324-BAEA0C395E11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{290F28FE-1C4F-4AB9-8D28-FF6C91227399}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{290F28FE-1C4F-4AB9-8D28-FF6C91227399}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{290F28FE-1C4F-4AB9-8D28-FF6C91227399}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{290F28FE-1C4F-4AB9-8D28-FF6C91227399}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {109DF311-DEC3-4259-AB78-193A87598156}
+	EndGlobalSection
+EndGlobal
