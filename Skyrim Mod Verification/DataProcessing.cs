@@ -17,11 +17,19 @@ namespace Skyrim_Mod_Verification
 		/// <returns></returns>
 		public static string ReadPathInfo(string jsonPath = "ConfigLocations.json")
 		{
-			var path = Path.Combine(Environment.CurrentDirectory, jsonPath);
-			using var jsonStream = new StreamReader(path);
-			var readData = jsonStream.ReadToEnd();
-			Console.WriteLine(readData);
-			return readData;
+			if (!string.IsNullOrWhiteSpace(jsonPath)) try
+				{
+					var path = Path.Combine(Environment.CurrentDirectory, jsonPath);
+					using var jsonStream = new StreamReader(path);
+					var readData = jsonStream.ReadToEnd();
+					Console.WriteLine(readData);
+					return readData;
+				}
+				catch
+				{
+					return "";
+				}
+			return "";
 		}
 
 		/// <summary>
@@ -67,7 +75,7 @@ namespace Skyrim_Mod_Verification
 				var dirRar = Directory.EnumerateFiles(info.CompressedSource, "*.rar") ?? new List<string>();
 				var dirZip = Directory.EnumerateFiles(info.CompressedSource, "*.zip") ?? new List<string>();
 				var dir7z = Directory.EnumerateFiles(info.CompressedSource, "*.7z") ?? new List<string>();
-				return dirRar.Concat(dirZip).Concat(dir7z);
+				return dirRar.Concat(dirZip).Concat(dir7z).OrderBy(x => x);
 			}
 			catch
 			{
