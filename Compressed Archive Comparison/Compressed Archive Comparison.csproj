@@ -3,11 +3,11 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>SkyrimModVerification</RootNamespace>
+    <RootNamespace>CompressedArchiveComparison</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UserSecretsId>4e40c216-d7f1-47b2-ae7a-527fef39d635</UserSecretsId>
-    <Title>Skyrim Mod Verification</Title>
+    <Title>Compressed Archive Comparison</Title>
     <Authors>Draconvolk</Authors>
     <PackageProjectUrl>https://github.com/Draconvolk/Skyrim-Mod-Verification</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Draconvolk/Skyrim-Mod-Verification</RepositoryUrl>

@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
-		<RootNamespace>SkyrimModUnitTest</RootNamespace>
+		<RootNamespace>CompressedArchiveComparisonTest</RootNamespace>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 
@@ -18,7 +18,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Skyrim Mod Verification\Skyrim Mod Verification.csproj" />
+		<ProjectReference Include="..\Compressed Archive Comparison\Compressed Archive Comparison.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
