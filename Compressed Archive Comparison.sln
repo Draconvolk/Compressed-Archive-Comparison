@@ -3,9 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33712.159
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skyrim Mod Verification", "Skyrim Mod Verification\Skyrim Mod Verification.csproj", "{4FC44513-8F7A-4E45-B324-BAEA0C395E11}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Compressed Archive Comparison", "Compressed Archive Comparison\Compressed Archive Comparison.csproj", "{4FC44513-8F7A-4E45-B324-BAEA0C395E11}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skyrim Mod UnitTest", "Skyrim Mod UnitTest\Skyrim Mod UnitTest.csproj", "{290F28FE-1C4F-4AB9-8D28-FF6C91227399}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Compressed Archive Comparison Test", "Compressed Archive Comparison Test\Compressed Archive Comparison Test.csproj", "{290F28FE-1C4F-4AB9-8D28-FF6C91227399}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4FC44513-8F7A-4E45-B324-BAEA0C395E11} = {4FC44513-8F7A-4E45-B324-BAEA0C395E11}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
