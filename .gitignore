@@ -361,3 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/Skyrim Mod UnitTest/TestFile1.txt
+/Skyrim Mod UnitTest/TestFile2.txt

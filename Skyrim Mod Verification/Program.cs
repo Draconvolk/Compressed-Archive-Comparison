@@ -1,31 +1,84 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using Skyrim_Mod_Verification;
+using CompressedArchiveComparison;
 
-Console.WriteLine("Hello, World!");
+const string source = "source";
 
-var readData = DataProcessing.ReadPathInfo();
-var folderInfo = DataProcessing.GetAsInfo(readData);
+var folderInfo = GetInfoFromJson();
+var sourceList = await GetFileList(folderInfo);
 
-if(!DataProcessing.IsValidInfo(folderInfo))
-{
-	Console.WriteLine("Invalid Source and Destination data in Json file. Please specify valid paths and try again.");
-	Console.WriteLine();
-	Console.WriteLine();
-	Console.WriteLine();
-	Console.WriteLine();
-	Environment.Exit(-1);
-}
+Console.WriteLine("Compressed Files Found");
 
-Console.WriteLine($"Src: {folderInfo.CompressedSource}");
-Console.WriteLine($"Dest: {folderInfo.DeployDestination}");
+await PrintFileList(sourceList);
 
+var destinationList = await DataProcessing.GetDirectoryFileList(folderInfo);
+var missingList = await DataProcessing.GetMissingSourceFiles(folderInfo, sourceList, destinationList);
 
-//using (var archiveFile = new ArchiveFile(@"Archive.ARJ"))
-//{
-//	archiveFile.Extract("Output"); // extract all
-//}
+await PrintFileList(missingList, "missing");
+await ExportToFile(missingList, folderInfo);
+
 Console.WriteLine();
 Console.WriteLine("Code Complete!");
 Console.WriteLine();
-Console.WriteLine();
-Console.WriteLine();
+//End of Main
+static IInfo GetInfoFromJson()
+{
+	var readData = DataProcessing.ReadPathInfo();
+
+	var folderInfo = DataProcessing.GetAsInfo(readData);
+	return folderInfo;
+}
+
+static async Task<IEnumerable<string>> GetFileList(IInfo folderInfo)
+{
+	if (!DataProcessing.IsValidInfo(folderInfo))
+	{
+		Console.WriteLine("Invalid Source and Destination data in Json file. Please specify valid paths and try again.");
+		Console.WriteLine();
+		Environment.Exit(-1);
+	}
+
+	Console.WriteLine();
+	Console.WriteLine($"Src: {folderInfo.CompressedSource}");
+	Console.WriteLine($"Dest: {folderInfo.DeployDestination}");
+	Console.WriteLine();
+	var fileList = await DataProcessing.GetCompressedFileList(folderInfo);
+	return fileList;
+}
+
+static async Task PrintFileList(IEnumerable<string> fileList, string type = source)
+{
+	foreach (var file in fileList)
+	{
+		Console.WriteLine(file);
+		var fileContents = type == source ? await DataProcessing.GetCompressedFileContent(file) : new List<string>();
+
+#if DEBUG
+		await Task.Run(() =>
+		{
+			foreach (var contents in fileContents)
+			{
+				Console.WriteLine($"   {contents}");
+			}
+		});
+		if (type == source)
+		{
+			Console.WriteLine();
+		}
+#endif
+	}
+}
+
+static async Task ExportToFile(IEnumerable<string> fileList, IInfo info)
+{
+	if (await DataProcessing.WriteToFile(fileList, info.ExportFileName))
+	{
+		Console.WriteLine();
+		Console.WriteLine("Missing File List export successful");
+		Console.WriteLine();
+	}
+	else
+	{
+		Console.WriteLine("*** An error was encountered attempting to export the Missing File List");
+		Console.WriteLine();
+	}
+}
