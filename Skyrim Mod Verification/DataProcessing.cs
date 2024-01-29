@@ -1,11 +1,10 @@
 ﻿using System.IO.Compression;
 using System.Text.Json;
 
-namespace SkyrimModVerification
+namespace CompressedArchiveComparison
 {
 	public static class DataProcessing
 	{
-
 		/// <summary>
 		/// Deserialize Json file values into a FolderLocationInfo object
 		/// </summary>
@@ -33,7 +32,7 @@ namespace SkyrimModVerification
 		/// </summary>
 		/// <param name="filePath"></param>
 		/// <returns></returns>
-		public static IEnumerable<string> GetCompressedFileContent(string filePath)
+		public static async Task<IEnumerable<string>> GetCompressedFileContent(string filePath)
 		{
 			if (!string.IsNullOrWhiteSpace(filePath))
 			{
@@ -41,11 +40,14 @@ namespace SkyrimModVerification
 				{
 					var compression = CompressionFactory.GetCompressionType(filePath) ?? throw new Exception();
 					var fileList = new List<string>();
-					foreach (var file in compression.GetFiles())
+					return await Task.Run(() =>
 					{
-						fileList.Add(file);
-					}
-					return fileList;
+						foreach (var file in compression.GetFiles())
+						{
+							fileList.Add(file);
+						}
+						return fileList;
+					});
 				}
 				catch
 				{
@@ -57,7 +59,6 @@ namespace SkyrimModVerification
 			{
 				return new List<string>();
 			}
-
 		}
 
 		/// <summary>
@@ -65,14 +66,17 @@ namespace SkyrimModVerification
 		/// </summary>
 		/// <param name="info"></param>
 		/// <returns></returns>
-		public static IEnumerable<string> GetCompressedFileList(IInfo info)
+		public static async Task<IEnumerable<string>> GetCompressedFileList(IInfo info)
 		{
 			try
 			{
-				var dirRar = Directory.EnumerateFiles(info.CompressedSource, "*.rar") ?? new List<string>();
-				var dirZip = Directory.EnumerateFiles(info.CompressedSource, "*.zip") ?? new List<string>();
-				var dir7z = Directory.EnumerateFiles(info.CompressedSource, "*.7z") ?? new List<string>();
-				return dirRar.Concat(dirZip).Concat(dir7z).OrderBy(x => x);
+				return await Task.Run(() =>
+				{
+					var dirRar = Directory.EnumerateFiles(info.CompressedSource, "*.rar") ?? new List<string>();
+					var dirZip = Directory.EnumerateFiles(info.CompressedSource, "*.zip") ?? new List<string>();
+					var dir7z = Directory.EnumerateFiles(info.CompressedSource, "*.7z") ?? new List<string>();
+					return dirRar.Concat(dirZip).Concat(dir7z).OrderBy(x => x);
+				});
 			}
 			catch
 			{
@@ -86,12 +90,15 @@ namespace SkyrimModVerification
 		/// </summary>
 		/// <param name="info"></param>
 		/// <returns></returns>
-		public static IEnumerable<string> GetDirectoryFileList(IInfo info)
+		public static async Task<IEnumerable<string>> GetDirectoryFileList(IInfo info)
 		{
 			try
 			{
-				var dir = Directory.EnumerateFiles(info.DeployDestination, "", SearchOption.AllDirectories) ?? new List<string>();
-				return dir.OrderBy(x => x);
+				return await Task.Run(() =>
+				{
+					var dir = Directory.EnumerateFiles(info.DeployDestination, "", SearchOption.AllDirectories) ?? new List<string>();
+					return dir.OrderBy(x => x);
+				});
 			}
 			catch
 			{
@@ -107,16 +114,21 @@ namespace SkyrimModVerification
 		/// <param name="sourceList"></param>
 		/// <param name="destinationList"></param>
 		/// <returns></returns>
-		public static IEnumerable<string> GetMissingSourceFiles(IInfo info, IEnumerable<string> sourceList, IEnumerable<string> destinationList)
+		public static async Task<IEnumerable<string>> GetMissingSourceFiles(IInfo info, IEnumerable<string> sourceList, IEnumerable<string> destinationList)
 		{
-			var dest = TransformList(destinationList, info.DeployDestination);
-
+			var dest = FullPathToRelative(destinationList, info.DeployDestination);
 			var missingList = new List<string>();
-			foreach (var file in sourceList)
+			await Task.Run(async () =>
 			{
-				var contents = TransformList(GetCompressedFileContent(file), info.CompressedSource);
-				missingList.AddRange(contents.Where(x => !dest.Contains(x)));
-			}
+				foreach (var file in sourceList)
+				{
+					var compressedFileContent = await GetCompressedFileContent(file);
+					var relativeFileContents = FullPathToRelative(compressedFileContent, info.CompressedSource);
+					var missingFiles = relativeFileContents.Where(x => !dest.Contains(x));
+					var fullFilePath = RelativeToFullPath(missingFiles, file, "\\");
+					missingList.AddRange(fullFilePath);
+				}
+			});
 			return missingList;
 		}
 
@@ -153,8 +165,18 @@ namespace SkyrimModVerification
 					return "";
 				}
 			}
-
 			return "";
+		}
+
+		/// <summary>
+		/// Removes the text of removeVal from each item in list
+		/// </summary>
+		/// <param name="list"></param>
+		/// <param name="removePath"></param>
+		/// <returns></returns>
+		public static IEnumerable<string> FullPathToRelative(IEnumerable<string> list, string removePath)
+		{
+			return list.Select(y => y.Replace(removePath, ""));
 		}
 
 		/// <summary>
@@ -163,9 +185,72 @@ namespace SkyrimModVerification
 		/// <param name="list"></param>
 		/// <param name="removeVal"></param>
 		/// <returns></returns>
-		public static IEnumerable<string> TransformList(IEnumerable<string> list, string removeVal)
+		public static IEnumerable<string> RelativeToFullPath(IEnumerable<string> list, string addPath, string separator)
 		{
-			return list.Select(y => y.Replace(removeVal, ""));
+			return list.Select(y => $"{addPath}{separator}{y}");
 		}
+
+		/// <summary>
+		/// Writes the referenced list of string names to the file 
+		/// </summary>
+		/// <param name="list"></param>
+		/// <param name="filePath"></param>
+		/// <returns></returns>
+		public static async Task<bool> WriteToFile(IEnumerable<string> list, string filePath)
+		{
+			if (list == null || !list.Any())
+			{
+				Console.WriteLine("No records found missing. Nothing to Export");
+				return false;
+			}
+			filePath = NormalizeFileName(filePath);
+			if (filePath == "")
+			{
+				return false;
+			}
+			try
+			{
+				await File.WriteAllTextAsync(filePath, "The Following files were missing from the destination:" + Environment.NewLine);
+				await File.AppendAllLinesAsync(filePath, list);
+			}
+			catch
+			{
+				Console.WriteLine($"*** Something went wrong while trying to write the missing files to the log file [{filePath}]");
+				return false;
+			}
+			Console.WriteLine($"Successfuly wrote missing files to output file [{filePath}]");
+			return true;
+		}
+
+		public static string NormalizeFileName(string filePath)
+		{
+			if (string.IsNullOrWhiteSpace(filePath))
+			{
+				filePath = "MissingFilesFound.txt";
+			}
+			if (filePath.Length > 0 && !filePath.Contains('.'))
+			{
+				filePath = filePath.TrimEnd() + ".txt";
+			}
+
+			var tmpFile = new FileInfo(filePath);
+			if (!ValidFileExtensions.Contains(tmpFile.Extension.ToLower()))
+			{
+				Console.Write($"*** Invalid FileName Extension for output file [{tmpFile.Extension}]. Please use one of the following: ");
+				foreach (var ext in ValidFileExtensions)
+				{
+
+					Console.Write(ext + " ");
+				}
+				Console.WriteLine();
+				return "";
+			}
+			return Path.GetFullPath(filePath);
+		}
+
+		/// <summary>
+		/// Valid File Extensions for Output File to be written to
+		/// </summary>
+		public static readonly List<string> ValidFileExtensions = [".log", ".txt"];
 	}
 }

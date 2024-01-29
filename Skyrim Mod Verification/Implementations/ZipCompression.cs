@@ -1,6 +1,6 @@
 ﻿using System.IO.Compression;
 
-namespace SkyrimModVerification
+namespace CompressedArchiveComparison
 {
 	public class ZipCompression : ICompression
 	{

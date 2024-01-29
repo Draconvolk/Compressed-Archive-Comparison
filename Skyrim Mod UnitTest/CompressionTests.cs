@@ -1,11 +1,10 @@
-using SkyrimModVerification;
+using CompressedArchiveComparison;
 
-namespace SkyrimModUnitTest
+namespace CompressedArchiveComparisonTests
 {
 	[TestClass]
 	public class CompressionTests
 	{
-
 		[TestMethod]
 		[DataRow("TestZip.zip")]
 		[DataRow("TestSevenZip.7z")]
@@ -54,7 +53,6 @@ namespace SkyrimModUnitTest
 			}
 		}
 
-
 		[TestMethod]
 		public void B_GetCompressedFileContent_Not_Null()
 		{
@@ -77,7 +75,7 @@ namespace SkyrimModUnitTest
 			var sevenZipResult = new SevenZipCompression(TestData.ValidCompressedFile7z);
 			var result = sevenZipResult.GetFiles();
 			var resultCount = result.Count();
-			var resultNames = result.Aggregate((a, b) => $"{a}, {b}").Trim();
+			var resultNames = result.FlattenToString();
 			var expectedNames = "TestFile1.txt, TestFile2.txt";
 
 			Assert.IsNotNull(result);
@@ -91,7 +89,7 @@ namespace SkyrimModUnitTest
 			var sevenZipResult = new SevenZipCompression();
 			var result = sevenZipResult.GetFiles(TestData.ValidCompressedFile7z);
 			var resultCount = result.Count();
-			var resultNames = result.Aggregate((a, b) => $"{a}, {b}").Trim();
+			var resultNames = result.FlattenToString();
 			var expectedNames = "TestFile1.txt, TestFile2.txt";
 
 			Assert.IsNotNull(result);
@@ -116,7 +114,7 @@ namespace SkyrimModUnitTest
 			var rarResult = new RarCompression(TestData.ValidCompressedFileRar);
 			var result = rarResult.GetFiles();
 			var resultCount = result.Count();
-			var resultNames = result.Aggregate((a, b) => $"{a}, {b}").Trim();
+			var resultNames = result.FlattenToString();
 			var expectedNames = "TestFile1.txt, TestFile2.txt";
 
 			Assert.IsNotNull(result);
@@ -130,14 +128,13 @@ namespace SkyrimModUnitTest
 			var rarResult = new RarCompression();
 			var result = rarResult.GetFiles(TestData.ValidCompressedFileRar);
 			var resultCount = result.Count();
-			var resultNames = result.Aggregate((a, b) => $"{a}, {b}").Trim();
+			var resultNames = result.FlattenToString();
 			var expectedNames = "TestFile1.txt, TestFile2.txt";
 
 			Assert.IsNotNull(result);
 			Assert.AreEqual(2, resultCount);
 			Assert.AreEqual(expectedNames, resultNames);
 		}
-
 
 		[TestMethod]
 		public void C_GetCompressedFileContent_InValid_Rar()
@@ -156,7 +153,7 @@ namespace SkyrimModUnitTest
 			var zipResult = new ZipCompression(TestData.ValidCompressedFileZip);
 			var result = zipResult.GetFiles();
 			var resultCount = result.Count();
-			var resultNames = result.Aggregate((a, b) => $"{a}, {b}").Trim();
+			var resultNames = result.FlattenToString();
 			var expectedNames = "TestFile1.txt, TestFile2.txt";
 
 			Assert.IsNotNull(result);
@@ -170,7 +167,7 @@ namespace SkyrimModUnitTest
 			var zipResult = new ZipCompression();
 			var result = zipResult.GetFiles(TestData.ValidCompressedFileZip);
 			var resultCount = result.Count();
-			var resultNames = result.Aggregate((a, b) => $"{a}, {b}").Trim();
+			var resultNames = result.FlattenToString();
 			var expectedNames = "TestFile1.txt, TestFile2.txt";
 
 			Assert.IsNotNull(result);
@@ -189,13 +186,12 @@ namespace SkyrimModUnitTest
 			Assert.AreEqual(0, resultCount);
 		}
 
-
 		[TestMethod]
-		public void D_GetCompressedFileContent_Valid_SevenZip()
+		public async Task D_GetCompressedFileContent_Valid_SevenZip()
 		{
-			var result = DataProcessing.GetCompressedFileContent(TestData.ValidCompressedFile7z);
+			var result = await DataProcessing.GetCompressedFileContent(TestData.ValidCompressedFile7z);
 			var resultCount = result.Count();
-			var resultNames = result.Aggregate((a, b) => $"{a}, {b}").Trim();
+			var resultNames = result.FlattenToString();
 			var expectedNames = "TestFile1.txt, TestFile2.txt";
 
 			Assert.IsNotNull(result);
@@ -204,9 +200,9 @@ namespace SkyrimModUnitTest
 		}
 
 		[TestMethod]
-		public void D_GetCompressedFileContent_InValid_SevenZip()
+		public async Task D_GetCompressedFileContent_InValid_SevenZip()
 		{
-			var result = DataProcessing.GetCompressedFileContent(TestData.InvalidCompressed7z);
+			var result = await DataProcessing.GetCompressedFileContent(TestData.InvalidCompressed7z);
 			var resultCount = result.Count();
 
 			Assert.IsNotNull(result);
@@ -215,11 +211,11 @@ namespace SkyrimModUnitTest
 
 
 		[TestMethod]
-		public void D_GetCompressedFileContent_Valid_Rar()
+		public async Task D_GetCompressedFileContent_Valid_Rar()
 		{
-			var result = DataProcessing.GetCompressedFileContent(TestData.ValidCompressedFileRar);
+			var result = await DataProcessing.GetCompressedFileContent(TestData.ValidCompressedFileRar);
 			var resultCount = result.Count();
-			var resultNames = result.Aggregate((a, b) => $"{a}, {b}").Trim();
+			var resultNames = result.FlattenToString();
 			var expectedNames = "TestFile1.txt, TestFile2.txt";
 
 			Assert.IsNotNull(result);
@@ -228,9 +224,9 @@ namespace SkyrimModUnitTest
 		}
 
 		[TestMethod]
-		public void D_GetCompressedFileContent_InValid_Rar()
+		public async Task D_GetCompressedFileContent_InValid_Rar()
 		{
-			var result = DataProcessing.GetCompressedFileContent(TestData.InvalidCompressedRar);
+			var result = await DataProcessing.GetCompressedFileContent(TestData.InvalidCompressedRar);
 			var resultCount = result.Count();
 
 			Assert.IsNotNull(result);
@@ -238,11 +234,11 @@ namespace SkyrimModUnitTest
 		}
 
 		[TestMethod]
-		public void D_GetCompressedFileContent_Valid_Zip()
+		public async Task D_GetCompressedFileContent_Valid_Zip()
 		{
-			var result = DataProcessing.GetCompressedFileContent(TestData.ValidCompressedFileZip);
+			var result = await DataProcessing.GetCompressedFileContent(TestData.ValidCompressedFileZip);
 			var resultCount = result.Count();
-			var resultNames = result.Aggregate((a, b) => $"{a}, {b}").Trim();
+			var resultNames = result.FlattenToString();
 			var expectedNames = "TestFile1.txt, TestFile2.txt";
 
 			Assert.IsNotNull(result);
@@ -251,9 +247,9 @@ namespace SkyrimModUnitTest
 		}
 
 		[TestMethod]
-		public void D_GetCompressedFileContent_InValid_Zip()
+		public async Task D_GetCompressedFileContent_InValid_Zip()
 		{
-			var result = DataProcessing.GetCompressedFileContent(TestData.InvalidCompressedZip);
+			var result = await DataProcessing.GetCompressedFileContent(TestData.InvalidCompressedZip);
 			var resultCount = result.Count();
 
 			Assert.IsNotNull(result);

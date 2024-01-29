@@ -1,6 +1,6 @@
-using SkyrimModVerification;
+using CompressedArchiveComparison;
 
-namespace SkyrimModUnitTest
+namespace CompressedArchiveComparisonTests
 {
 	[TestClass]
 	public class InitializationTests
@@ -18,6 +18,17 @@ namespace SkyrimModUnitTest
 		{
 			var result = DataProcessing.ReadPathInfo();
 
+			Assert.IsNotNull(result);
+			Assert.AreEqual(TestData.ConfigLocationsJson, result);
+		}
+
+		[TestMethod]
+		[DataRow("TestInfo.json")]
+		public void A_ReadPathInfo_Correct_Value_Param(string testData)
+		{
+			var result = DataProcessing.ReadPathInfo(testData);
+
+			Assert.IsNotNull(result);
 			Assert.AreEqual(TestData.ConfigLocationsJson, result);
 		}
 
@@ -49,6 +60,8 @@ namespace SkyrimModUnitTest
 			Assert.IsNotNull(result);
 			Assert.AreEqual(TestData.ValidFolderInfo.CompressedSource, result.CompressedSource);
 			Assert.AreEqual(TestData.ValidFolderInfo.DeployDestination, result.DeployDestination);
+			Assert.AreEqual(TestData.ValidFolderInfo.ExportFileName, result.ExportFileName);
+			Assert.AreEqual(TestData.ValidFolderInfo.Verbose, result.Verbose);
 		}
 
 		[TestMethod]
@@ -62,6 +75,7 @@ namespace SkyrimModUnitTest
 			Assert.IsNotNull(result);
 			Assert.AreEqual("", result.CompressedSource);
 			Assert.AreEqual("", result.DeployDestination);
+			Assert.AreEqual("MissingFilesFound.txt", result.ExportFileName);
 		}
 
 		[TestMethod]
@@ -81,33 +95,34 @@ namespace SkyrimModUnitTest
 		}
 
 		[TestMethod]
-		public void D_GetCompressedFilesList_Not_Null()
+		public async Task D_GetCompressedFilesList_Not_Null()
 		{
-			var compressedlist = DataProcessing.GetCompressedFileList(TestData.ValidFolderInfo);
+			var compressedlist = await DataProcessing.GetCompressedFileList(TestData.ValidFolderInfo);
 
 			Assert.IsNotNull(compressedlist);
 		}
 
 		[TestMethod]
-		public void D_GetCompressedFilesList_Has_Records()
+		public async Task D_GetCompressedFilesList_Has_Records()
 		{
-			var compressedlist = DataProcessing.GetCompressedFileList(TestData.ValidFolderInfo);
+			var compressedlist = await DataProcessing.GetCompressedFileList(TestData.ValidFolderInfo);
 
 			Assert.IsTrue(compressedlist.Any());
 		}
 
 		[TestMethod]
-		public void D_GetCompressedFilesList_Empty_Data_Handled()
+		public async Task D_GetCompressedFilesList_Empty_Data_Handled()
 		{
-			var compressedlist = DataProcessing.GetCompressedFileList(TestData.EmptyFolderInfo);
+			var compressedlist = await DataProcessing.GetCompressedFileList(TestData.EmptyFolderInfo);
 
 			Assert.IsNotNull(compressedlist);
 			Assert.IsFalse(compressedlist.Any());
 		}
+
 		[TestMethod]
-		public void D_GetCompressedFilesList_Bad_Data_Handled()
+		public async Task D_GetCompressedFilesList_Bad_Data_Handled()
 		{
-			var compressedlist = DataProcessing.GetCompressedFileList(TestData.BadFolderInfo);
+			var compressedlist = await DataProcessing.GetCompressedFileList(TestData.BadFolderInfo);
 
 			Assert.IsNotNull(compressedlist);
 			Assert.IsFalse(compressedlist.Any());

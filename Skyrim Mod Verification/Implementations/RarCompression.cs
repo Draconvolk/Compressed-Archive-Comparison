@@ -1,6 +1,6 @@
 ﻿using SharpCompress.Archives;
 
-namespace SkyrimModVerification
+namespace CompressedArchiveComparison
 {
 	public class RarCompression : ICompression
 	{

@@ -1,4 +1,4 @@
-﻿namespace SkyrimModVerification
+﻿namespace CompressedArchiveComparison
 {
 	public interface ICompression
 	{
