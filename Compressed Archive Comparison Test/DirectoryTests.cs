@@ -169,5 +169,16 @@ namespace CompressedArchiveComparisonTests
 			Assert.IsNotNull(result);
 			Assert.AreEqual("", result);
 		}
+
+		[TestMethod]
+		public void E_OnlyFiles_Valid()
+		{
+			var result = DataProcessing.OnlyFiles(TestData.EmptyFolderInfo, TestData.SourceCompressedFullList);
+			var expectedResult = TestData.ExpectedSourceCompressedOnlyFilesList.FlattenToString();
+			var resultFlattened = result.FlattenToString();
+
+			Assert.IsNotNull(result);
+			Assert.AreEqual(expectedResult, resultFlattened);
+		}
 	}
 }

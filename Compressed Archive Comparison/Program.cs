@@ -8,12 +8,12 @@ var sourceList = await GetFileList(folderInfo);
 
 Console.WriteLine("Compressed Files Found");
 
-await PrintFileList(sourceList);
+await PrintFileList(sourceList, folderInfo);
 
 var destinationList = await DataProcessing.GetDirectoryFileList(folderInfo);
 var missingList = await DataProcessing.GetMissingSourceFiles(folderInfo, sourceList, destinationList);
 
-await PrintFileList(missingList, "missing");
+await PrintFileList(missingList, folderInfo, "missing");
 await ExportToFile(missingList, folderInfo);
 
 Console.WriteLine();
@@ -45,26 +45,27 @@ static async Task<IEnumerable<string>> GetFileList(IInfo folderInfo)
 	return fileList;
 }
 
-static async Task PrintFileList(IEnumerable<string> fileList, string type = source)
+static async Task PrintFileList(IEnumerable<string> fileList, IInfo info, string type = source)
 {
 	foreach (var file in fileList)
 	{
 		Console.WriteLine(file);
 		var fileContents = type == source ? await DataProcessing.GetCompressedFileContent(file) : new List<string>();
 
-#if DEBUG
-		await Task.Run(() =>
-		{
-			foreach (var contents in fileContents)
+		if (info.Verbose) {
+			await Task.Run(() =>
 			{
-				Console.WriteLine($"   {contents}");
-			}
-		});
+				foreach (var contents in fileContents)
+				{
+					Console.WriteLine($"   {contents}");
+				}
+			});
+		}
+
 		if (type == source)
 		{
 			Console.WriteLine();
 		}
-#endif
 	}
 }
 

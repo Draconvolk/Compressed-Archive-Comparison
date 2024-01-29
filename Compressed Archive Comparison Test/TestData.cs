@@ -4,7 +4,8 @@ namespace CompressedArchiveComparisonTests
 {
 	public static class TestData
 	{
-		public static readonly string ConfigLocationsJson = "{\r\n\t\"CompressedSource\": \"C:\\\\Games\\\\Skyrim Downloads\\\\SkyrimSE\",\r\n\t\"DeployDestination\": \"C:\\\\Games\\\\Skyrim Mods\",\r\n\t\"ExportFileName\": \"C:\\\\Games\\\\MissingFilesFound.txt\",\r\n\t\"Verbose\": true\r\n}\r\n";
+		public static readonly string ConfigLocationsJson = "{\r\n\t\"CompressedSource\": \"C:\\\\Games\\\\Skyrim Downloads\\\\SkyrimSE\",\r\n\t\"DeployDestination\": \"C:\\\\Games\\\\Skyrim Mods\",\r\n\t\"ExportFileName\": \"C:\\\\Games\\\\MissingFilesFound.txt\",\r\n\t\"Verbose\": false\r\n}\r\n";
+		public static readonly string TestInfoJson = "{\r\n\t\"CompressedSource\": \"C:\\\\Games\\\\Skyrim Downloads\\\\SkyrimSE\",\r\n\t\"DeployDestination\": \"C:\\\\Games\\\\Skyrim Mods\",\r\n\t\"ExportFileName\": \"C:\\\\Games\\\\MissingFilesFound.txt\",\r\n\t\"Verbose\": true\r\n}\r\n";
 		public static readonly IInfo ValidFolderInfo = new FolderLocationInfo()
 		{
 			CompressedSource = @"C:\Games\Skyrim Downloads\SkyrimSE",
@@ -94,5 +95,25 @@ namespace CompressedArchiveComparisonTests
 		];
 		public static readonly string NormalizedEmptyFileName = Path.Combine(ValidPath, "MissingFilesFound.txt");
 		public static readonly string NormalizedRelativeFileName = Path.Combine(ValidDir, "MissingFilesFound.txt");
+		public static readonly List<string> SourceCompressedFullList = [
+			"TestDir1",
+			"TestDir1\\TestFile1.txt",
+			"TestDir1\\TestFile2.txt",
+			"TestDir1\\NestedDir1",
+			"TestDir1\\NestedDir1\\TestFile3.txt",
+			"TestDir1\\NestedDir1\\TestFile4.txt",
+			"TestDir1\\NestedDir1\\TestFile5.txt",
+			"TestDir1\\NestedDir2",
+			"TestDir1\\NestedDir2\\TestFile6.txt"
+		];
+		public static readonly List<string> ExpectedSourceCompressedOnlyFilesList = [
+			"TestDir1\\TestFile1.txt",
+			"TestDir1\\TestFile2.txt",
+			"TestDir1\\NestedDir1\\TestFile3.txt",
+			"TestDir1\\NestedDir1\\TestFile4.txt",
+			"TestDir1\\NestedDir1\\TestFile5.txt",
+			"TestDir1\\NestedDir2\\TestFile6.txt"
+		];
+
 	}
 }

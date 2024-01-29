@@ -29,7 +29,7 @@ namespace CompressedArchiveComparisonTests
 			var result = DataProcessing.ReadPathInfo(testData);
 
 			Assert.IsNotNull(result);
-			Assert.AreEqual(TestData.ConfigLocationsJson, result);
+			Assert.AreEqual(TestData.TestInfoJson, result);
 		}
 
 		[TestMethod]
@@ -47,7 +47,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public void B_GetAsInfo_Not_Null()
 		{
-			var result = DataProcessing.GetAsInfo(TestData.ConfigLocationsJson);
+			var result = DataProcessing.GetAsInfo(TestData.TestInfoJson);
 
 			Assert.IsNotNull(result);
 		}
@@ -55,7 +55,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public void B_GetAsInfo_Correct_Value()
 		{
-			var result = DataProcessing.GetAsInfo(TestData.ConfigLocationsJson);
+			var result = DataProcessing.GetAsInfo(TestData.TestInfoJson);
 
 			Assert.IsNotNull(result);
 			Assert.AreEqual(TestData.ValidFolderInfo.CompressedSource, result.CompressedSource);

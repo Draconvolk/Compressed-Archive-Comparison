@@ -39,9 +39,10 @@ namespace CompressedArchiveComparison
 				{
 					var compression = CompressionFactory.GetCompressionType(filePath) ?? throw new Exception();
 					var fileList = new List<string>();
-					return await Task.Run(() =>
+					return await Task.Run(async () =>
 					{
-						foreach (var file in compression.GetFiles())
+						var files = await compression.GetFiles();
+						foreach (var file in files)
 						{
 							fileList.Add(file);
 						}
@@ -119,17 +120,31 @@ namespace CompressedArchiveComparison
 			var missingList = new List<string>();
 			await Task.Run(async () =>
 			{
+
 				foreach (var file in sourceList)
 				{
 					var compressedFileContent = await GetCompressedFileContent(file);
-					var relativeFileContents = FullPathToRelative(compressedFileContent, info.CompressedSource);
+					var justCompressedFiles = OnlyFiles(info, compressedFileContent);
+
+					var relativeFileContents = FullPathToRelative(justCompressedFiles, info.CompressedSource);
 					var missingFiles = relativeFileContents.Where(x => !dest.Contains(x));
 					var fullFilePath = RelativeToFullPath(missingFiles, file, "\\");
+
 					missingList.AddRange(fullFilePath);
 				}
+
+				
 			});
 			return missingList;
 		}
+
+		/// <summary>
+		/// Remove directory only rows and return only rows with filenames
+		/// </summary>
+		/// <param name="info"></param>
+		/// <param name="compressedFileContent"></param>
+		/// <returns></returns>
+		public static IEnumerable<string> OnlyFiles(IInfo info, IEnumerable<string> compressedFileContent) => (!info.Verbose) ? compressedFileContent.Where(x => x.Contains('.')) : compressedFileContent;
 
 		/// <summary>
 		/// Validate Source and Destination values are not empty
