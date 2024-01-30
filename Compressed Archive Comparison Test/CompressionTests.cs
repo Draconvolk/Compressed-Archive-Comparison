@@ -36,7 +36,6 @@ namespace CompressedArchiveComparisonTests
 			var result = CompressionFactory.GetCompressionType(type);
 
 			Assert.IsNotNull(result);
-
 			switch (type[type.LastIndexOf('.')..])
 			{
 				case ".zip":
@@ -62,18 +61,18 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public void B_GetCompressedFileContent_Invalid_NotNull()
+		public async Task B_GetCompressedFileContent_Invalid_NotNull()
 		{
-			var result = DataProcessing.GetCompressedFileContent(TestData.InvalidCompressedZip);
+			var result = await DataProcessing.GetCompressedFileContent(TestData.InvalidCompressedZip);
 
 			Assert.IsNotNull(result);
 		}
 
 		[TestMethod]
-		public void C_GetCompressedFileContent_Valid_SevenZip()
+		public async Task C_GetCompressedFileContent_Valid_SevenZip()
 		{
 			var sevenZipResult = new SevenZipCompression(TestData.ValidCompressedFile7z);
-			var result = sevenZipResult.GetFiles();
+			var result = await sevenZipResult.GetFiles();
 			var resultCount = result.Count();
 			var resultNames = result.FlattenToString();
 			var expectedNames = "TestFile1.txt, TestFile2.txt";
@@ -84,10 +83,10 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public void C_GetCompressedFileContent_Valid_SevenZipParam()
+		public async Task C_GetCompressedFileContent_Valid_SevenZipParam()
 		{
-			var sevenZipResult = new SevenZipCompression();
-			var result = sevenZipResult.GetFiles(TestData.ValidCompressedFile7z);
+			var sevenZipResult = new SevenZipCompression(TestData.ValidCompressedFile7z);
+			var result = await sevenZipResult.GetFiles(TestData.ValidCompressedFile7z);
 			var resultCount = result.Count();
 			var resultNames = result.FlattenToString();
 			var expectedNames = "TestFile1.txt, TestFile2.txt";
@@ -98,10 +97,10 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public void C_GetCompressedFileContent_InValid_SevenZip()
+		public async Task C_GetCompressedFileContent_InValid_SevenZip()
 		{
 			var sevenZipResult = new SevenZipCompression(TestData.InvalidCompressedZip);
-			var result = sevenZipResult.GetFiles();
+			var result = await sevenZipResult.GetFiles();
 			var resultCount = result.Count();
 
 			Assert.IsNotNull(result);
@@ -109,10 +108,10 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public void C_GetCompressedFileContent_Valid_Rar()
+		public async Task C_GetCompressedFileContent_Valid_Rar()
 		{
 			var rarResult = new RarCompression(TestData.ValidCompressedFileRar);
-			var result = rarResult.GetFiles();
+			var result = await rarResult.GetFiles();
 			var resultCount = result.Count();
 			var resultNames = result.FlattenToString();
 			var expectedNames = "TestFile1.txt, TestFile2.txt";
@@ -123,10 +122,10 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public void C_GetCompressedFileContent_Valid_RarParam()
+		public async Task C_GetCompressedFileContent_Valid_RarParam()
 		{
-			var rarResult = new RarCompression();
-			var result = rarResult.GetFiles(TestData.ValidCompressedFileRar);
+			var rarResult = new RarCompression(TestData.ValidCompressedFileRar);
+			var result = await rarResult.GetFiles(TestData.ValidCompressedFileRar);
 			var resultCount = result.Count();
 			var resultNames = result.FlattenToString();
 			var expectedNames = "TestFile1.txt, TestFile2.txt";
@@ -137,10 +136,10 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public void C_GetCompressedFileContent_InValid_Rar()
+		public async Task C_GetCompressedFileContent_InValid_Rar()
 		{
 			var rarResult = new RarCompression(TestData.InvalidCompressedZip);
-			var result = rarResult.GetFiles();
+			var result = await rarResult.GetFiles();
 			var resultCount = result.Count();
 
 			Assert.IsNotNull(result);
@@ -148,10 +147,10 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public void C_GetCompressedFileContent_Valid_Zip()
+		public async Task C_GetCompressedFileContent_Valid_Zip()
 		{
 			var zipResult = new ZipCompression(TestData.ValidCompressedFileZip);
-			var result = zipResult.GetFiles();
+			var result = await zipResult.GetFiles();
 			var resultCount = result.Count();
 			var resultNames = result.FlattenToString();
 			var expectedNames = "TestFile1.txt, TestFile2.txt";
@@ -162,10 +161,10 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public void C_GetCompressedFileContent_Valid_ZipParam()
+		public async Task C_GetCompressedFileContent_Valid_ZipParam()
 		{
-			var zipResult = new ZipCompression();
-			var result = zipResult.GetFiles(TestData.ValidCompressedFileZip);
+			var zipResult = new ZipCompression(TestData.ValidCompressedFileZip);
+			var result = await zipResult.GetFiles(TestData.ValidCompressedFileZip);
 			var resultCount = result.Count();
 			var resultNames = result.FlattenToString();
 			var expectedNames = "TestFile1.txt, TestFile2.txt";
@@ -176,10 +175,10 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public void C_GetCompressedFileContent_InValid_Zip()
+		public async Task C_GetCompressedFileContent_InValid_Zip()
 		{
 			var zipResult = new ZipCompression(TestData.InvalidCompressedZip);
-			var result = zipResult.GetFiles();
+			var result = await zipResult.GetFiles();
 			var resultCount = result.Count();
 
 			Assert.IsNotNull(result);

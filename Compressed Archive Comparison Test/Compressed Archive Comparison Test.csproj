@@ -22,34 +22,52 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Update="DestinationDir\TestDir2\NestedDir1\TestFile2.txt">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="DestinationDir\TestDir2\NestedDir3\TestFile4.txt">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="DestinationDir\TestDir2\TestFile1.txt">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="SourceDir\TestDir2.7z">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="SourceDir\TestDir1.7z">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="SourceDir\TestDir1.zip">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
 		<None Update="TestInfo.json">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-		<None Update="TestDir1\NestedDir1\TestFile5.txt">
+		<None Update="DestinationDir\TestDir1\NestedDir1\TestFile5.txt">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-		<None Update="TestDir1\NestedDir1\TestFile4.txt">
+		<None Update="DestinationDir\TestDir1\NestedDir1\TestFile4.txt">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-		<None Update="TestDir1\NestedDir1\TestFile3.txt">
+		<None Update="DestinationDir\TestDir1\NestedDir1\TestFile3.txt">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-		<None Update="TestDir1\NestedDir2\TestFile6.txt">
+		<None Update="DestinationDir\TestDir1\NestedDir2\TestFile6.txt">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-		<None Update="TestDir1\TestFile1.txt">
+		<None Update="DestinationDir\TestDir1\TestFile1.txt">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-		<None Update="TestDir1\TestFile2.txt">
+		<None Update="DestinationDir\TestDir1\TestFile2.txt">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-		<None Update="TestRar.rar">
+		<None Update="SourceDir\TestRar.rar">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-		<None Update="TestSevenZip.7z">
+		<None Update="SourceDir\TestSevenZip.7z">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-		<None Update="TestZip.zip">
+		<None Update="SourceDir\TestZip.zip">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

@@ -12,8 +12,8 @@
     <PackageProjectUrl>https://github.com/Draconvolk/Skyrim-Mod-Verification</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Draconvolk/Skyrim-Mod-Verification</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
-    <AssemblyVersion>0.1.0</AssemblyVersion>
-    <FileVersion>0.1.0</FileVersion>
+    <AssemblyVersion>0.1.5</AssemblyVersion>
+    <FileVersion>0.1.5</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="ConfigLocations.json">
+    <None Update="Config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
