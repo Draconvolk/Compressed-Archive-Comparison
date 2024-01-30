@@ -1,6 +1,6 @@
 {
-	"CompressedSource": "C:\\Games\\Skyrim Downloads\\SkyrimSE",
-	"DeployDestination": "C:\\Games\\Skyrim Mods",
-	"ExportFileName": "C:\\Games\\MissingFilesFound.txt",
+	"CompressedSource": "SourceDir",
+	"DeployDestination": "DestinationDir",
+	"ExportFileName": "MissingFilesFound.txt",
 	"Verbose": true
 }

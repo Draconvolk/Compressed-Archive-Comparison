@@ -2,12 +2,8 @@
 
 namespace CompressedArchiveComparison
 {
-	public class RarCompression : AbstractCompressionBase, ICompression
+	public class RarCompression(string fileName) : AbstractCompressionBase(fileName), ICompression
 	{
-		public RarCompression() { }
-
-		public RarCompression(string fileName) : base(fileName) { }
-
 		public override async Task<IEnumerable<string>> GetFiles(string filePath)
 		{
 			try
@@ -18,7 +14,7 @@ namespace CompressedArchiveComparison
 					var fileList = new List<string>();
 					foreach (var file in compressedData.Entries)
 					{
-						fileList.Add(file.Key);
+						fileList.Add(FixForDesktop(file.Key));
 					}
 					return fileList;
 				});

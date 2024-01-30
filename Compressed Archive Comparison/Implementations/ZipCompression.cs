@@ -2,13 +2,8 @@
 
 namespace CompressedArchiveComparison
 {
-	public class ZipCompression : AbstractCompressionBase, ICompression
+	public class ZipCompression(string fileName) : AbstractCompressionBase(fileName), ICompression
 	{
-
-		public ZipCompression() { }
-
-		public ZipCompression(string fileName) : base(fileName) { }
-
 		public override async Task<IEnumerable<string>> GetFiles(string filePath)
 		{
 			try

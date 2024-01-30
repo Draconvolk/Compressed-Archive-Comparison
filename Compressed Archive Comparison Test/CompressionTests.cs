@@ -36,7 +36,6 @@ namespace CompressedArchiveComparisonTests
 			var result = CompressionFactory.GetCompressionType(type);
 
 			Assert.IsNotNull(result);
-
 			switch (type[type.LastIndexOf('.')..])
 			{
 				case ".zip":
@@ -86,7 +85,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public async Task C_GetCompressedFileContent_Valid_SevenZipParam()
 		{
-			var sevenZipResult = new SevenZipCompression();
+			var sevenZipResult = new SevenZipCompression(TestData.ValidCompressedFile7z);
 			var result = await sevenZipResult.GetFiles(TestData.ValidCompressedFile7z);
 			var resultCount = result.Count();
 			var resultNames = result.FlattenToString();
@@ -125,7 +124,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public async Task C_GetCompressedFileContent_Valid_RarParam()
 		{
-			var rarResult = new RarCompression();
+			var rarResult = new RarCompression(TestData.ValidCompressedFileRar);
 			var result = await rarResult.GetFiles(TestData.ValidCompressedFileRar);
 			var resultCount = result.Count();
 			var resultNames = result.FlattenToString();
@@ -164,7 +163,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public async Task C_GetCompressedFileContent_Valid_ZipParam()
 		{
-			var zipResult = new ZipCompression();
+			var zipResult = new ZipCompression(TestData.ValidCompressedFileZip);
 			var result = await zipResult.GetFiles(TestData.ValidCompressedFileZip);
 			var resultCount = result.Count();
 			var resultNames = result.FlattenToString();

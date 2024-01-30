@@ -5,7 +5,12 @@ namespace CompressedArchiveComparison
 	public static class DataProcessing
 	{
 		/// <summary>
-		/// Deserialize Json file values into a FolderLocationInfo object
+		/// Valid File Extensions for Output File to be written to
+		/// </summary>
+		public static readonly List<string> ValidFileExtensions = [".log", ".txt"];
+
+		/// <summary>
+		/// Deserialize Json file values into a ConfigurationInfo object
 		/// </summary>
 		/// <param name="jsonData"></param>
 		/// <returns></returns>
@@ -15,15 +20,15 @@ namespace CompressedArchiveComparison
 			{
 				try
 				{
-					return JsonSerializer.Deserialize<FolderLocationInfo>(jsonData) ?? new FolderLocationInfo();
+					return JsonSerializer.Deserialize<ConfigurationInfo>(jsonData) ?? new ConfigurationInfo();
 				}
 				catch
 				{
 					Console.WriteLine($"*** Something went wrong trying to deserialize the jsonData.");
-					return new FolderLocationInfo();
+					return new ConfigurationInfo();
 				}
 			}
-			return new FolderLocationInfo();
+			return new ConfigurationInfo();
 		}
 
 		/// <summary>
@@ -38,16 +43,8 @@ namespace CompressedArchiveComparison
 				try
 				{
 					var compression = CompressionFactory.GetCompressionType(filePath) ?? throw new Exception();
-					var fileList = new List<string>();
-					return await Task.Run(async () =>
-					{
-						var files = await compression.GetFiles();
-						foreach (var file in files)
-						{
-							fileList.Add(file);
-						}
-						return fileList;
-					});
+					var files = await compression.GetFiles();
+					return files;
 				}
 				catch
 				{
@@ -110,41 +107,52 @@ namespace CompressedArchiveComparison
 		/// <summary>
 		/// Get a list of which files in sourceList are missing from destinationList
 		/// </summary>
-		/// <param name="info"></param>
 		/// <param name="sourceList"></param>
 		/// <param name="destinationList"></param>
 		/// <returns></returns>
-		public static async Task<IEnumerable<string>> GetMissingSourceFiles(IInfo info, IEnumerable<string> sourceList, IEnumerable<string> destinationList)
+		public static async Task<IEnumerable<string>> GetMissingSourceFiles(IEnumerable<string> sourceList, IEnumerable<string> destinationList)
 		{
-			var dest = FullPathToRelative(destinationList, info.DeployDestination);
+			//var dest = FullPathToRelative(destinationList, info.DeployDestination);
 			var missingList = new List<string>();
-			await Task.Run(async () =>
+			foreach (var file in sourceList)
 			{
-
-				foreach (var file in sourceList)
-				{
-					var compressedFileContent = await GetCompressedFileContent(file);
-					var justCompressedFiles = OnlyFiles(info, compressedFileContent);
-
-					var relativeFileContents = FullPathToRelative(justCompressedFiles, info.CompressedSource);
-					var missingFiles = relativeFileContents.Where(x => !dest.Contains(x));
-					var fullFilePath = RelativeToFullPath(missingFiles, file, "\\");
-
-					missingList.AddRange(fullFilePath);
-				}
-
-				
-			});
-			return missingList;
+				var compressedFileContent = await GetCompressedFileContent(file);
+				var justCompressedFiles = OnlyFiles(compressedFileContent);
+				var fileName = GetFileName(file);
+				var targetFolder = fileName[..fileName.LastIndexOf('.')];
+				var targetDestList = FilterDestination(destinationList, targetFolder);
+				var missingFiles = justCompressedFiles.Where(x => !targetDestList.Any(y => y.Contains(x)));
+				var fullFilePath = AddPathToValue(missingFiles, file, "|");
+				missingList.AddRange(fullFilePath);
+			}
+			return missingList.OrderBy(x => x);
 		}
 
 		/// <summary>
 		/// Remove directory only rows and return only rows with filenames
 		/// </summary>
-		/// <param name="info"></param>
 		/// <param name="compressedFileContent"></param>
 		/// <returns></returns>
-		public static IEnumerable<string> OnlyFiles(IInfo info, IEnumerable<string> compressedFileContent) => (!info.Verbose) ? compressedFileContent.Where(x => x.Contains('.')) : compressedFileContent;
+		public static IEnumerable<string> OnlyFiles(IEnumerable<string> compressedFileContent) 
+			=> compressedFileContent.Where(x => x.Contains('.'));
+
+		/// <summary>
+		/// Returns just the filename, stripped of additional path 
+		/// </summary>
+		/// <param name="file"></param>
+		/// <returns></returns>
+		public static string GetFileName(string file)
+			=> file[(file.LastIndexOf('\\') + 1)..];
+
+
+		/// <summary>
+		/// Filters the destinationList to only records including the targetFolder
+		/// </summary>
+		/// <param name="destinationList"></param>
+		/// <param name="targetFolder"></param>
+		/// <returns></returns>
+		public static IEnumerable<string> FilterDestination(IEnumerable<string> destinationList, string targetFolder)
+			=> destinationList.Where(x => x.Contains(targetFolder));
 
 		/// <summary>
 		/// Validate Source and Destination values are not empty
@@ -152,16 +160,14 @@ namespace CompressedArchiveComparison
 		/// <param name="info"></param>
 		/// <returns></returns>
 		public static bool IsValidInfo(IInfo info)
-		{
-			return !(info == null || string.IsNullOrWhiteSpace(info.CompressedSource) || string.IsNullOrWhiteSpace(info.DeployDestination));
-		}
+			=> !(info == null || string.IsNullOrWhiteSpace(info.CompressedSource) || string.IsNullOrWhiteSpace(info.DeployDestination));
 
 		/// <summary>
 		/// Read the json data from a file into a string
 		/// </summary>
 		/// <param name="jsonPath"></param>
 		/// <returns></returns>
-		public static string ReadPathInfo(string jsonPath = "ConfigLocations.json")
+		public static string ReadPathInfo(string jsonPath)
 		{
 			if (!string.IsNullOrWhiteSpace(jsonPath))
 			{
@@ -183,26 +189,44 @@ namespace CompressedArchiveComparison
 		}
 
 		/// <summary>
-		/// Removes the text of removeVal from each item in list
+		/// Applies FullPathToRelativeTextReplacement on each item in list
 		/// </summary>
 		/// <param name="list"></param>
-		/// <param name="removePath"></param>
+		/// <param name="removeText"></param>
+		/// <param name="targetFolder"></param>
 		/// <returns></returns>
-		public static IEnumerable<string> FullPathToRelative(IEnumerable<string> list, string removePath)
-		{
-			return list.Select(y => y.Replace(removePath, ""));
-		}
+		public static IEnumerable<string> FullPathToRelative(IEnumerable<string> list, string removeText, string targetFolder = "")
+			=> list.Select(y => FullPathToRelativeTextReplacement(y, removeText, targetFolder));
 
 		/// <summary>
-		/// Removes the text of removeVal from each item in list
+		/// Removes the text of removeText from text and adds targetFolderas a prefix
+		/// </summary>
+		/// <param name="text"></param>
+		/// <param name="removePath"></param>
+		/// <param name="targetFolder"></param>
+		/// <returns></returns>
+		public static string FullPathToRelativeTextReplacement(string text, string removePath, string targetFolder = "")
+			=> $"{targetFolder}{text.Replace(removePath, "")}";
+
+		/// <summary>
+		/// Remove compressed files found in the destination list so the list can be shortened for the next search
+		/// </summary>
+		/// <param name="info"></param>
+		/// <param name="destinationList"></param>
+		/// <param name="foundFiles"></param>
+		/// <returns></returns>
+		public static List<string> RemoveFoundFiles(IInfo info, List<string> destinationList, IEnumerable<string> foundFiles)
+			=> destinationList.Where(x => !foundFiles.Contains(FullPathToRelativeTextReplacement(x, info.DeployDestination))).ToList();
+
+		/// <summary>
+		/// Adds the full path value to each item in the list with the specified separator
 		/// </summary>
 		/// <param name="list"></param>
-		/// <param name="removeVal"></param>
+		/// <param name="addPath"></param>
+		/// <param name="separator"></param>
 		/// <returns></returns>
-		public static IEnumerable<string> RelativeToFullPath(IEnumerable<string> list, string addPath, string separator)
-		{
-			return list.Select(y => $"{addPath}{separator}{y}");
-		}
+		public static IEnumerable<string> AddPathToValue(IEnumerable<string> list, string addPath, string separator)
+			=> list.Select(y => $"{addPath}{separator}{y}");
 
 		/// <summary>
 		/// Writes the referenced list of string names to the file 
@@ -236,6 +260,11 @@ namespace CompressedArchiveComparison
 			return true;
 		}
 
+		/// <summary>
+		/// Returns a normalized full path for the specified filename to export to, or "" if a filepath not of type .log or .txt is given
+		/// </summary>
+		/// <param name="filePath"></param>
+		/// <returns></returns>
 		public static string NormalizeFileName(string filePath)
 		{
 			if (string.IsNullOrWhiteSpace(filePath))
@@ -261,10 +290,5 @@ namespace CompressedArchiveComparison
 			}
 			return Path.GetFullPath(filePath);
 		}
-
-		/// <summary>
-		/// Valid File Extensions for Output File to be written to
-		/// </summary>
-		public static readonly List<string> ValidFileExtensions = [".log", ".txt"];
 	}
 }

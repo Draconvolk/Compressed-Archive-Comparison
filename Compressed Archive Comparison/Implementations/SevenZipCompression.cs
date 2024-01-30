@@ -2,12 +2,8 @@
 
 namespace CompressedArchiveComparison
 {
-	public class SevenZipCompression : AbstractCompressionBase, ICompression
+	public class SevenZipCompression(string fileName) : AbstractCompressionBase(fileName), ICompression
 	{
-		public SevenZipCompression() { }
-
-		public SevenZipCompression(string fileName) : base(fileName) { }
-
 		public override async Task<IEnumerable<string>> GetFiles(string filePath)
 		{
 			try
@@ -18,7 +14,7 @@ namespace CompressedArchiveComparison
 					var fileList = new List<string>();
 					foreach (var file in compressedData.Entries)
 					{
-						fileList.Add(file.Key);
+						fileList.Add(FixForDesktop(file.Key));
 					}
 					return fileList;
 				});
@@ -29,5 +25,6 @@ namespace CompressedArchiveComparison
 				return new List<string>();
 			}
 		}
+
 	}
 }

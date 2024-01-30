@@ -6,23 +6,6 @@ namespace CompressedArchiveComparisonTests
 	public class InitializationTests
 	{
 		[TestMethod]
-		public void A_ReadPathInfo_Not_Null()
-		{
-			var result = DataProcessing.ReadPathInfo();
-
-			Assert.IsNotNull(result);
-		}
-
-		[TestMethod]
-		public void A_ReadPathInfo_Correct_Value()
-		{
-			var result = DataProcessing.ReadPathInfo();
-
-			Assert.IsNotNull(result);
-			Assert.AreEqual(TestData.ConfigLocationsJson, result);
-		}
-
-		[TestMethod]
 		[DataRow("TestInfo.json")]
 		public void A_ReadPathInfo_Correct_Value_Param(string testData)
 		{
@@ -76,6 +59,7 @@ namespace CompressedArchiveComparisonTests
 			Assert.AreEqual("", result.CompressedSource);
 			Assert.AreEqual("", result.DeployDestination);
 			Assert.AreEqual("MissingFilesFound.txt", result.ExportFileName);
+			Assert.AreEqual(false, result.Verbose);
 		}
 
 		[TestMethod]

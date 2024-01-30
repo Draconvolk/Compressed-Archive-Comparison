@@ -3,18 +3,9 @@ using SharpCompress.Archives;
 
 namespace CompressedArchiveComparison
 {
-	public abstract class AbstractCompressionBase: ICompression
+	public abstract class AbstractCompressionBase(string fileName = "") : ICompression
 	{
-		protected AbstractCompressionBase()
-		{
-		}
-
-		protected AbstractCompressionBase(string fileName)
-		{
-			FileName = fileName;
-		}
-
-		public virtual string FileName { get; set; } = "";
+		public virtual string FileName { get; set; } = fileName;
 
 		public virtual async Task<IEnumerable<string>> GetFiles()
 		{
@@ -38,7 +29,7 @@ namespace CompressedArchiveComparison
 					var fileList = new List<string>();
 					foreach (var file in compressedData.Entries)
 					{
-						fileList.Add(file.Key);
+						fileList.Add(FixForDesktop(file.Key));
 					}
 					return fileList;
 				});
@@ -52,5 +43,7 @@ namespace CompressedArchiveComparison
 		}
 
 		public virtual string GetTypeName() => GetType().Name;
+
+		protected static string FixForDesktop(string fullPath) => fullPath.Replace('/', '\\');
 	}
 }
