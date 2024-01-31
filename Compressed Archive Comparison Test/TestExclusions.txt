@@ -1,0 +1,2 @@
+﻿TestDir2.7z
+TestZip.zip

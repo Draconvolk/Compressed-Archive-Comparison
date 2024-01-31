@@ -18,7 +18,7 @@ namespace CompressedArchiveComparisonTests
 		{
 			var result = await DataProcessing.GetDirectoryFileList(TestData.TestDirInfo);
 			var expectedResult = TestData.FullPathResultList;
-			Utilities.AssertAreEqual(result, expectedResult);
+			Utilities.AssertAreEqual(expectedResult, result);
 		}
 
 
@@ -53,48 +53,13 @@ namespace CompressedArchiveComparisonTests
 			Assert.AreEqual(0, resultCount);
 		}
 
-		[TestMethod]
-		public void B_FullPathToRelativeTextReplacement_Valid_Result()
-		{
-			var result = DataProcessing.FullPathToRelativeTextReplacement("Source\\TestDir1\\TestFile1.txt", TestData.SourceToRemove);
-			var expectedResult = "TestDir1\\TestFile1.txt";
-
-			Assert.IsNotNull(result);
-			Assert.AreEqual(expectedResult, result);
-		}
-
-		[TestMethod]
-		public void B_FullPathToRelativeTextReplacement_Valid__Result()
-		{
-			var result = DataProcessing.FullPathToRelativeTextReplacement("Source\\TestDir1\\TestFile1.txt", TestData.SourceToRemove, "Destination\\");
-			var expectedResult = "Destination\\TestDir1\\TestFile1.txt";
-
-			Assert.IsNotNull(result);
-			Assert.AreEqual(expectedResult, result);
-		}
-
-		[TestMethod]
-		public void B_FullPathToRelative_Valid_Result()
-		{
-			var result = DataProcessing.FullPathToRelative(TestData.ValidSourceList, TestData.SourceToRemove).ToList();
-			var expectedResult = TestData.ExpectedResultList;
-			Utilities.AssertAreEqual(result, expectedResult);
-		}
-
-		[TestMethod]
-		public void B_FullPathToRelative_Valid_NoChange()
-		{
-			var result = DataProcessing.FullPathToRelative(TestData.ValidSourceList, "Nothing");
-			var expectedResult = TestData.ValidSourceList;
-			Utilities.AssertAreEqual(result, expectedResult);
-		}
 
 		[TestMethod]
 		public void C_AddPathtoValue_Valid_Result()
 		{
 			var result = DataProcessing.AddPathToValue(TestData.ExpectedResultList, TestData.PathToAdd, "\\").ToList();
 			var expectedResult = TestData.RelativePathResultList;
-			Utilities.AssertAreEqual(result, expectedResult);
+			Utilities.AssertAreEqual(expectedResult, result);
 		}
 
 		[TestMethod]
@@ -102,7 +67,7 @@ namespace CompressedArchiveComparisonTests
 		{
 			var result = await DataProcessing.GetMissingSourceFiles(TestData.FullPathSourcetList, TestData.FullPathResultList);
 			var expectedResult = TestData.FullPathMissingList;
-			Utilities.AssertAreEqual(result, expectedResult);
+			Utilities.AssertAreEqual(expectedResult, result);
 		}
 
 		[TestMethod]
@@ -159,7 +124,7 @@ namespace CompressedArchiveComparisonTests
 		{
 			var result = DataProcessing.OnlyFiles(TestData.SourceCompressedFullList);
 			var expectedResult = TestData.ExpectedSourceCompressedOnlyFilesList;
-			Utilities.AssertAreEqual(result, expectedResult);
+			Utilities.AssertAreEqual(expectedResult, result);
 		}
 
 		[TestMethod]
@@ -190,19 +155,11 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public void H_RemoveFoundFiles_Valid()
-		{
-			var result = DataProcessing.RemoveFoundFiles(TestData.FullPathFolderInfo, TestData.FullPathResultList, TestData.FullPathMissingList).ToList();
-			var expectedResult = TestData.FullPathResultList;
-			Utilities.AssertAreEqual(result, expectedResult);
-		}
-
-		[TestMethod]
 		public void I_FilterDestination_Valid()
 		{
 			var result = DataProcessing.FilterDestination(TestData.DestinationFullList, TestData.FilterFolder).ToList();
 			var expectedResult = TestData.DestinationFilteredList;
-			Utilities.AssertAreEqual(result, expectedResult);
+			Utilities.AssertAreEqual(expectedResult, result);
 		}
 
 		[TestMethod]

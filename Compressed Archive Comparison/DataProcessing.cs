@@ -105,6 +105,26 @@ namespace CompressedArchiveComparison
 		}
 
 		/// <summary>
+		/// Read the text content of info.ExclusionFileName
+		/// </summary>
+		/// <param name="info"></param>
+		/// <returns></returns>
+		public static async Task<string> GetExclusionFileText(IInfo info)
+		{
+			try
+			{
+				var file = new FileInfo(info.ExclusionsFileName);
+				var excludeText = await ReadFileData(file.FullName);
+				return excludeText;
+			}
+			catch
+			{
+				Console.WriteLine($"*** Something went wrong trying to read the exclusion file [{info.ExclusionsFileName}]");
+				return "";
+			}
+		}
+
+		/// <summary>
 		/// Get a list of which files in sourceList are missing from destinationList
 		/// </summary>
 		/// <param name="sourceList"></param>
@@ -155,6 +175,16 @@ namespace CompressedArchiveComparison
 			=> destinationList.Where(x => x.Contains(targetFolder));
 
 		/// <summary>
+		/// Adds the full path value to each item in the list with the specified separator
+		/// </summary>
+		/// <param name="list"></param>
+		/// <param name="addPath"></param>
+		/// <param name="separator"></param>
+		/// <returns></returns>
+		public static IEnumerable<string> AddPathToValue(IEnumerable<string> list, string addPath, string separator)
+			=> list.Select(y => $"{addPath}{separator}{y}");
+
+		/// <summary>
 		/// Validate Source and Destination values are not empty
 		/// </summary>
 		/// <param name="info"></param>
@@ -162,20 +192,33 @@ namespace CompressedArchiveComparison
 		public static bool IsValidInfo(IInfo info)
 			=> !(info == null || string.IsNullOrWhiteSpace(info.CompressedSource) || string.IsNullOrWhiteSpace(info.DeployDestination));
 
+		public static IEnumerable<string> ParseExclusionFileText(string exclusionText)
+		{
+			var list = new List<string>();
+			try
+			{
+				list.AddRange(exclusionText.Split(' '));
+			}
+			catch
+			{
+				Console.WriteLine("*** Something went wrong parsing the exclusion file text");
+			}
+			return list;
+		}
+
 		/// <summary>
 		/// Read the json data from a file into a string
 		/// </summary>
 		/// <param name="jsonPath"></param>
 		/// <returns></returns>
-		public static string ReadPathInfo(string jsonPath)
+		public static async Task<string> ReadPathInfo(string jsonPath)
 		{
 			if (!string.IsNullOrWhiteSpace(jsonPath))
 			{
 				try
 				{
 					var path = Path.Combine(Environment.CurrentDirectory, jsonPath);
-					using var jsonStream = new StreamReader(path);
-					var readData = jsonStream.ReadToEnd();
+					var readData = await ReadFileData(path);
 					Console.WriteLine(readData);
 					return readData;
 				}
@@ -188,45 +231,20 @@ namespace CompressedArchiveComparison
 			return "";
 		}
 
-		/// <summary>
-		/// Applies FullPathToRelativeTextReplacement on each item in list
-		/// </summary>
-		/// <param name="list"></param>
-		/// <param name="removeText"></param>
-		/// <param name="targetFolder"></param>
-		/// <returns></returns>
-		public static IEnumerable<string> FullPathToRelative(IEnumerable<string> list, string removeText, string targetFolder = "")
-			=> list.Select(y => FullPathToRelativeTextReplacement(y, removeText, targetFolder));
-
-		/// <summary>
-		/// Removes the text of removeText from text and adds targetFolderas a prefix
-		/// </summary>
-		/// <param name="text"></param>
-		/// <param name="removePath"></param>
-		/// <param name="targetFolder"></param>
-		/// <returns></returns>
-		public static string FullPathToRelativeTextReplacement(string text, string removePath, string targetFolder = "")
-			=> $"{targetFolder}{text.Replace(removePath, "")}";
-
-		/// <summary>
-		/// Remove compressed files found in the destination list so the list can be shortened for the next search
-		/// </summary>
-		/// <param name="info"></param>
-		/// <param name="destinationList"></param>
-		/// <param name="foundFiles"></param>
-		/// <returns></returns>
-		public static List<string> RemoveFoundFiles(IInfo info, List<string> destinationList, IEnumerable<string> foundFiles)
-			=> destinationList.Where(x => !foundFiles.Contains(FullPathToRelativeTextReplacement(x, info.DeployDestination))).ToList();
-
-		/// <summary>
-		/// Adds the full path value to each item in the list with the specified separator
-		/// </summary>
-		/// <param name="list"></param>
-		/// <param name="addPath"></param>
-		/// <param name="separator"></param>
-		/// <returns></returns>
-		public static IEnumerable<string> AddPathToValue(IEnumerable<string> list, string addPath, string separator)
-			=> list.Select(y => $"{addPath}{separator}{y}");
+		public static async Task<string> ReadFileData(string path)
+		{
+			try
+			{
+				var jsonStream = new StreamReader(path);
+				var readData = await jsonStream.ReadToEndAsync();
+				return readData;
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"*** Error Reading from file [{path}] - {ex.Message}");
+				return "";
+			}
+		}
 
 		/// <summary>
 		/// Writes the referenced list of string names to the file 

@@ -8,18 +8,28 @@ try
 {
 	Console.WriteLine("The default config fileis [Config.json]. A custom config file can be specified as an argument");
 	workflow.SetConfig(args, configName);
-	workflow.LoadConfig();
+	var loadConfig = Task.Run(workflow.LoadConfig);
+	await loadConfig;
 }
 catch
 {
 	Environment.Exit(-1);
 }
-await workflow.LoadCompressedSource();
-await workflow.DisplaySource();
-await workflow.LoadDestination();
-await workflow.IdentifyMissingFiles();
-await workflow.DisplayMissingFiles();
-await workflow.ExportMissingFiles();
+
+var loadSource = Task.Run(workflow.LoadCompressedSource);
+var loadDestination = Task.Run(workflow.LoadDestination);
+
+Task.WaitAll(loadSource, loadDestination);
+
+var displaySource = Task.Run(workflow.DisplaySource);
+var identifyMissing = Task.Run(workflow.IdentifyMissingFiles);
+
+Task.WaitAll(displaySource, identifyMissing);
+
+var exportMissing = Task.Run(workflow.ExportMissingFiles);
+var displayMissing = Task.Run(workflow.DisplayMissingFiles);
+
+Task.WaitAll(exportMissing, displayMissing);
 
 Console.WriteLine();
 Console.WriteLine("Code Complete!");

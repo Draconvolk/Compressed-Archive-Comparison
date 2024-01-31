@@ -34,10 +34,10 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public void B_GetInfoFromJson_Correct_Value()
+		public async Task B_GetInfoFromJson_Correct_Value()
 		{
 			var defaultValue = "TestInfo.Json";
-			var result = Workflow.GetInfoFromJson(defaultValue);
+			var result = await Workflow.GetInfoFromJson(defaultValue);
 
 			Assert.IsNotNull(result);
 			Assert.AreEqual(TestData.ValidFolderInfo.CompressedSource, result.CompressedSource);
@@ -47,12 +47,12 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public void B_LoadConfig_Correct_Value()
+		public async Task B_LoadConfig_Correct_Value()
 		{
 			var defaultValue = "TestInfo.Json";
 			var workflow = new Workflow(TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
-			workflow.LoadConfig();
+			await workflow.LoadConfig();
 			var result = workflow.ConfigInfo;
 
 			Assert.IsNotNull(result);
@@ -68,12 +68,12 @@ namespace CompressedArchiveComparisonTests
 			var defaultValue = "TestInfo.Json";
 			var workflow = new Workflow(TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
-			workflow.LoadConfig();
+			await workflow.LoadConfig();
 			await workflow.LoadCompressedSource();
 			var sourceList = workflow.SourceList;
 			var expectedResult = TestData.LoadCompressedSourceExpectedValue;
 
-			Utilities.AssertAreEqual(sourceList, expectedResult);
+			Utilities.AssertAreEqual(expectedResult, sourceList);
 		}
 
 		[TestMethod]
@@ -82,13 +82,13 @@ namespace CompressedArchiveComparisonTests
 			var defaultValue = "TestInfo.Json";
 			var workflow = new Workflow(TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
-			workflow.LoadConfig();
+			await workflow.LoadConfig();
 			await workflow.LoadCompressedSource();
 			await workflow.LoadDestination();
 			var destinationList = workflow.DestinationList;
 			var expectedResult = TestData.LoadDestinationExpectedValue;
 
-			Utilities.AssertAreEqual(destinationList, expectedResult, true);
+			Utilities.AssertAreEqual(expectedResult, destinationList, true);
 		}
 
 		[TestMethod]
@@ -97,14 +97,18 @@ namespace CompressedArchiveComparisonTests
 			var defaultValue = "TestInfo.Json";
 			var workflow = new Workflow(TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
-			workflow.LoadConfig();
-			await workflow.LoadCompressedSource();
-			await workflow.LoadDestination();
+			await workflow.LoadConfig();
+			var tasks = new Task[]
+			{
+				Task.Factory.StartNew(workflow.LoadCompressedSource),
+				Task.Factory.StartNew(workflow.LoadDestination)
+			};
+			Task.WaitAll(tasks);
 			await workflow.IdentifyMissingFiles();
 			var missingFiles = workflow.MissingFiles;
 			var expectedResult = TestData.IdentifyMissingFilesExpectedValue;
 
-			Utilities.AssertAreEqual(missingFiles, expectedResult, true);
+			Utilities.AssertAreEqual(expectedResult, missingFiles, true);
 		}
 	}
 }

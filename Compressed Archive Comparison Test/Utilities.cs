@@ -9,10 +9,10 @@
 		/// <returns></returns>
 		public static string FlattenToString(this IEnumerable<string> list, string separator=", ") => list.Aggregate((a, b) => $"{a}{separator}{b}").Trim();
 
-		public static void AssertAreEqual(IEnumerable<string> result, List<string> expectedResult, bool debug=false)
+		public static void AssertAreEqual(List<string> expectedResult, IEnumerable<string> result, bool debug = false)
 		{
-			var actualResultsFlattened = result.FlattenToString(Environment.NewLine);
 			var expectedResultsFlattened = expectedResult.FlattenToString(Environment.NewLine);
+			var actualResultsFlattened = result.FlattenToString(Environment.NewLine);
 
 			if (debug)
 			{

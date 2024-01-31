@@ -1,6 +1,7 @@
 {
 	"CompressedSource": "SourceDir",
 	"DeployDestination": "DestinationDir",
+	"ExclusionsFileName": "TestExclusions.txt",
 	"ExportFileName": "MissingFilesFound.txt",
 	"Verbose": true
 }

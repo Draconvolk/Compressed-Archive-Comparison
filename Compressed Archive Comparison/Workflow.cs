@@ -22,9 +22,9 @@
 			Console.WriteLine("Config name set");
 		}
 
-		public void LoadConfig()
+		public async Task LoadConfig()
 		{
-			ConfigInfo = GetInfoFromJson(Config);
+			ConfigInfo = await GetInfoFromJson(Config);
 			Console.WriteLine("Config found");
 		}
 
@@ -52,9 +52,9 @@
 		public async Task ExportMissingFiles()
 			=> await ExportToFile(MissingFiles, ConfigInfo);
 
-		public static IInfo GetInfoFromJson(string configName)
+		public static async Task<IInfo> GetInfoFromJson(string configName)
 		{
-			var readData = DataProcessing.ReadPathInfo(configName);
+			var readData = await DataProcessing.ReadPathInfo(configName);
 			var ConfigInfo = DataProcessing.GetAsInfo(readData);
 			return ConfigInfo;
 		}
