@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using CompressedArchiveComparison.Interfaces;
+using System.Collections.Concurrent;
+using System.Text.Json;
 
 namespace CompressedArchiveComparison
 {
@@ -36,25 +38,24 @@ namespace CompressedArchiveComparison
 		/// </summary>
 		/// <param name="filePath"></param>
 		/// <returns></returns>
-		public static async Task<IEnumerable<string>> GetCompressedFileContent(string filePath)
+		public static IEnumerable<string> GetCompressedFileContent(string filePath)
 		{
-			if (!string.IsNullOrWhiteSpace(filePath))
+			var files = new List<string>();
+			if (string.IsNullOrWhiteSpace(filePath))
 			{
-				try
-				{
-					var compression = CompressionFactory.GetCompressionType(filePath) ?? throw new Exception();
-					var files = await compression.GetFiles();
-					return files;
-				}
-				catch
-				{
-					Console.WriteLine($"*** Something went wrong trying to read from the compressed file {filePath}");
-					return new List<string>();
-				}
+				return files;
 			}
-			else
+			try
 			{
-				return new List<string>();
+				var compression = CompressionFactory.GetCompressionType(filePath);
+				if (compression == null) { return files; }				
+				Parallel.ForEach(compression.GetFiles(), files.Add);
+				return files.OrderBy(x => x);
+			}
+			catch
+			{
+				Console.WriteLine($"*** Something went wrong trying to read from the compressed file {filePath}");
+				return files;
 			}
 		}
 
@@ -63,23 +64,41 @@ namespace CompressedArchiveComparison
 		/// </summary>
 		/// <param name="info"></param>
 		/// <returns></returns>
-		public static async Task<IEnumerable<string>> GetCompressedFileList(IInfo info)
+		public static IEnumerable<string> GetCompressedFileList(IInfo info)
 		{
+			var dirData = new List<string>();
 			try
 			{
-				return await Task.Run(() =>
-				{
-					var dirRar = Directory.EnumerateFiles(info.CompressedSource, "*.rar") ?? new List<string>();
-					var dirZip = Directory.EnumerateFiles(info.CompressedSource, "*.zip") ?? new List<string>();
-					var dir7z = Directory.EnumerateFiles(info.CompressedSource, "*.7z") ?? new List<string>();
-					return dirRar.Concat(dirZip).Concat(dir7z).OrderBy(x => x);
-				});
+				dirData.AddRange(GetCompressedOfType(info, "*.rar"));
+				dirData.AddRange(GetCompressedOfType(info, "*.zip"));
+				dirData.AddRange(GetCompressedOfType(info, "*.7z"));
 			}
 			catch
 			{
 				Console.WriteLine($"*** Something went wrong trying to read from the compressed file directory {info.CompressedSource}");
-				return new List<string>();
 			}
+			return dirData.OrderBy(x => x);
+		}
+
+
+		/// <summary>
+		/// Get a collection of the names of all files of type <paramref name="type"/>
+		/// </summary>
+		/// <param name="info"></param>
+		/// <param name="type"></param>
+		/// <returns></returns>
+		public static IEnumerable<string> GetCompressedOfType(IInfo info, string type)
+		{
+			var files = new List<string>();
+			try
+			{
+				files = Directory.EnumerateFiles(info.CompressedSource, type).ToList();
+			}
+			catch
+			{
+				Console.WriteLine($"*** Something went wrong trying to read from the compressed file directory {info.CompressedSource}");
+			}
+			return files;
 		}
 
 		/// <summary>
@@ -87,21 +106,22 @@ namespace CompressedArchiveComparison
 		/// </summary>
 		/// <param name="info"></param>
 		/// <returns></returns>
-		public static async Task<IEnumerable<string>> GetDirectoryFileList(IInfo info)
+		public static IEnumerable<string> GetDirectoryFileList(IInfo info)
 		{
+			var dir = new List<string>();
 			try
 			{
-				return await Task.Run(() =>
+				var files = Directory.EnumerateFiles(info.DeployDestination, "", SearchOption.AllDirectories);
+				foreach (var file in files)
 				{
-					var dir = Directory.EnumerateFiles(info.DeployDestination, "", SearchOption.AllDirectories) ?? new List<string>();
-					return dir.OrderBy(x => x);
-				});
+					dir.Add(file);
+				}
 			}
 			catch
 			{
 				Console.WriteLine($"*** Something went wrong trying to read from the file directory {info.DeployDestination}");
-				return new List<string>();
 			}
+			return dir;
 		}
 
 		/// <summary>
@@ -129,23 +149,66 @@ namespace CompressedArchiveComparison
 		/// </summary>
 		/// <param name="sourceList"></param>
 		/// <param name="destinationList"></param>
-		/// <returns></returns>
-		public static async Task<IEnumerable<string>> GetMissingSourceFiles(IEnumerable<string> sourceList, IEnumerable<string> destinationList)
+		/// <returns></returns>		
+		public static IEnumerable<string> GetMissingSourceFiles(IEnumerable<string> sourceList, IEnumerable<string> destinationList)
 		{
-			//var dest = FullPathToRelative(destinationList, info.DeployDestination);
-			var missingList = new List<string>();
-			foreach (var file in sourceList)
+			var missingFileBag = new ConcurrentBag<string>();
+			var missingTasks = new List<Task>();
+			Parallel.ForEach(sourceList, file =>
+				missingTasks.Add(Task.Run(async () =>
+				{
+					var files = await DetermineMissingFiles(file, destinationList);
+					foreach (var item in files)
+					{
+						missingFileBag.Add(item);
+					}
+				}))
+			);
+			Task.WaitAll([.. missingTasks]);
+
+			var executeMissingTasks = new List<Task>();
+			var missingList = new ConcurrentBag<string>();
+			while (!missingFileBag.IsEmpty)
 			{
-				var compressedFileContent = await GetCompressedFileContent(file);
-				var justCompressedFiles = OnlyFiles(compressedFileContent);
-				var fileName = GetFileName(file);
-				var targetFolder = fileName[..fileName.LastIndexOf('.')];
-				var targetDestList = FilterDestination(destinationList, targetFolder);
-				var missingFiles = justCompressedFiles.Where(x => !targetDestList.Any(y => y.Contains(x)));
-				var fullFilePath = AddPathToValue(missingFiles, file, "|");
-				missingList.AddRange(fullFilePath);
+				executeMissingTasks.Add(Task.Run(() =>
+				{
+					if (missingFileBag.TryTake(out var missingFile))
+					{
+						missingList.Add(missingFile);
+					}
+				}));
 			}
+			Task.WaitAll([.. executeMissingTasks]);
+
 			return missingList.OrderBy(x => x);
+		}
+
+		/// <summary>
+		/// Get the list of files from inside the specified compressed file and 
+		/// compare that against the destination list to determine any that are missing
+		/// </summary>
+		/// <param name="file"></param>
+		/// <param name="destinationList"></param>
+		/// <returns></returns>
+		public static async Task<IEnumerable<string>> DetermineMissingFiles(string file, IEnumerable<string> destinationList)
+		{
+			IEnumerable<string> justCompressedFiles = [];
+			var getCompressedTask = Task.Factory.StartNew(() =>
+			{
+				var compressedFileContent = GetCompressedFileContent(file);
+				justCompressedFiles = OnlyFiles(compressedFileContent);
+			});
+			IEnumerable<string> targetDestList = [];
+			var getDestTask = Task.Run(async () =>
+			{
+				var fileName = GetFileName(file);
+				var targetFolder = GetFolderName(fileName);
+				targetDestList = await FilterDestination(destinationList, targetFolder);
+			});
+			await Task.WhenAll([getCompressedTask, getDestTask]);
+			var missingFiles = await FilterMissingFiles(targetDestList, justCompressedFiles);
+			var fullFilePath = AddPathToValue(missingFiles, file, "|");
+			return fullFilePath;
 		}
 
 		/// <summary>
@@ -153,8 +216,16 @@ namespace CompressedArchiveComparison
 		/// </summary>
 		/// <param name="compressedFileContent"></param>
 		/// <returns></returns>
-		public static IEnumerable<string> OnlyFiles(IEnumerable<string> compressedFileContent) 
-			=> compressedFileContent.Where(x => x.Contains('.'));
+		public static IEnumerable<string> OnlyFiles(IEnumerable<string> compressedFileContent)
+		{
+			foreach (var file in compressedFileContent)
+			{
+				if (file.Contains('.'))
+				{
+					yield return file;
+				}
+			};
+		}
 
 		/// <summary>
 		/// Returns just the filename, stripped of additional path 
@@ -164,6 +235,26 @@ namespace CompressedArchiveComparison
 		public static string GetFileName(string file)
 			=> file[(file.LastIndexOf('\\') + 1)..];
 
+		/// <summary>
+		/// Returns the file name stripped of its extension
+		/// </summary>
+		/// <param name="fileName"></param>
+		/// <returns></returns>
+		public static string GetFolderName(string fileName)
+		{
+			if (string.IsNullOrWhiteSpace(fileName))
+			{
+				return "";
+			}
+			if (fileName.LastIndexOf('.') == -1)
+			{
+				return fileName;
+			}
+			else
+			{
+				return fileName[..fileName.LastIndexOf('.')];
+			}
+		}
 
 		/// <summary>
 		/// Filters the destinationList to only records including the targetFolder
@@ -171,8 +262,43 @@ namespace CompressedArchiveComparison
 		/// <param name="destinationList"></param>
 		/// <param name="targetFolder"></param>
 		/// <returns></returns>
-		public static IEnumerable<string> FilterDestination(IEnumerable<string> destinationList, string targetFolder)
-			=> destinationList.Where(x => x.Contains(targetFolder));
+		public static async Task<IEnumerable<string>> FilterDestination(IEnumerable<string> destinationList, string targetFolder)
+		{
+			return await Task.Factory.StartNew(() =>
+			{
+				var filtered = new List<string>();
+				foreach (var file in destinationList)
+				{
+					if (file.Contains(targetFolder))
+					{
+						filtered.Add(file);
+					}
+				}
+				return filtered;
+			});
+		}
+
+		/// <summary>
+		/// Filter out files that exist in the destination from the compressed collection
+		/// </summary>
+		/// <param name="targetDestList"></param>
+		/// <param name="justCompressedFiles"></param>
+		/// <returns></returns>
+		public static async Task<IEnumerable<string>> FilterMissingFiles(IEnumerable<string> targetDestList, IEnumerable<string> justCompressedFiles)
+		{
+			return await Task.Run(() =>
+			{
+				var missingFiles = new List<string>();
+				foreach (var file in justCompressedFiles)
+				{
+					if (!targetDestList.Any(y => y.Contains(file)))
+					{
+						missingFiles.Add(file);
+					}
+				}
+				return missingFiles;
+			});
+		}
 
 		/// <summary>
 		/// Adds the full path value to each item in the list with the specified separator
@@ -192,6 +318,11 @@ namespace CompressedArchiveComparison
 		public static bool IsValidInfo(IInfo info)
 			=> !(info == null || string.IsNullOrWhiteSpace(info.CompressedSource) || string.IsNullOrWhiteSpace(info.DeployDestination));
 
+		/// <summary>
+		/// Get a collection of compressed files to ignore
+		/// </summary>
+		/// <param name="exclusionText"></param>
+		/// <returns></returns>
 		public static IEnumerable<string> ParseExclusionFileText(string exclusionText)
 		{
 			var list = new List<string>();
@@ -231,6 +362,11 @@ namespace CompressedArchiveComparison
 			return "";
 		}
 
+		/// <summary>
+		/// Reads the text of the specified file as a single string
+		/// </summary>
+		/// <param name="path"></param>
+		/// <returns></returns>
 		public static async Task<string> ReadFileData(string path)
 		{
 			try
@@ -247,39 +383,45 @@ namespace CompressedArchiveComparison
 		}
 
 		/// <summary>
-		/// Writes the referenced list of string names to the file 
+		/// Writes the collection of string names to the file
 		/// </summary>
 		/// <param name="list"></param>
 		/// <param name="filePath"></param>
 		/// <returns></returns>
-		public static async Task<bool> WriteToFile(IEnumerable<string> list, string filePath)
+		public static async Task<bool> WriteToFile(IEnumerable<string> asyncList, string filePath)
 		{
-			if (list == null || !list.Any())
-			{
-				Console.WriteLine("No records found missing. Nothing to Export");
-				return false;
-			}
 			filePath = NormalizeFileName(filePath);
-			if (filePath == "")
-			{
-				return false;
-			}
+
 			try
 			{
+				if (string.IsNullOrWhiteSpace(filePath))
+				{
+					Console.WriteLine("Invalid filepath for output file, []");
+					return false;
+				}
+				if (!asyncList.Any())
+				{
+					Console.WriteLine("No records were found to be missing. There is nothing to export");
+					return false;
+				}
 				await File.WriteAllTextAsync(filePath, "The Following files were missing from the destination:" + Environment.NewLine);
-				await File.AppendAllLinesAsync(filePath, list);
+				foreach (var file in asyncList)
+				{
+					await File.AppendAllTextAsync(filePath, file + Environment.NewLine);
+				}
+				Console.WriteLine($"Successfuly wrote missing files to output file [{filePath}]");
+				return true;
 			}
 			catch
 			{
 				Console.WriteLine($"*** Something went wrong while trying to write the missing files to the log file [{filePath}]");
 				return false;
 			}
-			Console.WriteLine($"Successfuly wrote missing files to output file [{filePath}]");
-			return true;
 		}
 
 		/// <summary>
-		/// Returns a normalized full path for the specified filename to export to, or "" if a filepath not of type .log or .txt is given
+		/// Returns a normalized full path for the specified filename to export to,
+		/// or "" if a filepath not of type .log or .txt is given
 		/// </summary>
 		/// <param name="filePath"></param>
 		/// <returns></returns>
@@ -293,14 +435,12 @@ namespace CompressedArchiveComparison
 			{
 				filePath = filePath.TrimEnd() + ".txt";
 			}
-
 			var tmpFile = new FileInfo(filePath);
 			if (!ValidFileExtensions.Contains(tmpFile.Extension.ToLower()))
 			{
 				Console.Write($"*** Invalid FileName Extension for output file [{tmpFile.Extension}]. Please use one of the following: ");
 				foreach (var ext in ValidFileExtensions)
 				{
-
 					Console.Write(ext + " ");
 				}
 				Console.WriteLine();

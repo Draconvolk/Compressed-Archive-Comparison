@@ -1,4 +1,5 @@
 ﻿using CompressedArchiveComparison;
+using CompressedArchiveComparison.Interfaces;
 
 namespace CompressedArchiveComparisonTests
 {
@@ -27,6 +28,14 @@ namespace CompressedArchiveComparisonTests
 			DeployDestination = "Second Unknown Folder",
 			ExclusionsFileName = "BadExclusions.bat",
 			ExportFileName = "MissingFilesFound.bat",
+			Verbose = false
+		};
+		public static readonly IInfo ExpectedDefaultInfo = new ConfigurationInfo()
+		{
+			CompressedSource = "",
+			DeployDestination = "",
+			ExclusionsFileName = "Exclusions.txt",
+			ExportFileName = "MissingFilesFound.txt",
 			Verbose = false
 		};
 		public static readonly List<string> ExclusionFileList = [
@@ -96,7 +105,7 @@ namespace CompressedArchiveComparisonTests
 		{
 			CompressedSource = ValidSourceDir,
 			DeployDestination = ValidDestinationDir,
-			ExclusionsFileName= $"{ValidPath}\\TestExclusions.txt",
+			ExclusionsFileName = $"{ValidPath}\\TestExclusions.txt",
 			ExportFileName = $"{ValidPath}\\MissingFilesFound.txt",
 			Verbose = false
 		};

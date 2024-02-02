@@ -11,10 +11,10 @@ namespace CompressedArchiveComparisonTests
 		/// </summary>
 		[Ignore]
 		[TestMethod]
-		public async Task E_GetCompressedFileContent_Specific()
+		public void E_GetCompressedFileContent_Specific()
 		{
 			var file = "C:\\Games\\Skyrim Downloads\\SkyrimSE\\Skyrim Script Extender (SKSE64)-30379-2-2-6-1705522967.7z";
-			var result = await DataProcessing.GetCompressedFileContent(file);
+			var result = DataProcessing.GetCompressedFileContent(file);
 			var resultCount = result.Count();
 
 			Assert.IsNotNull(result);
