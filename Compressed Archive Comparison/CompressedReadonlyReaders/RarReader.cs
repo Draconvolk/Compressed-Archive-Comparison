@@ -1,9 +1,8 @@
-﻿using CompressedArchiveComparison.Interfaces;
-using SharpCompress.Archives;
+﻿using SharpCompress.Archives;
 
-namespace CompressedArchiveComparison
+namespace CompressedArchiveComparison.CompressedReadonlyReaders
 {
-	public class SevenZipReader : ICompressedReader
+	public class RarReader : ICompressedReader
 	{
 		public IEnumerable<string> Read(string filePath)
 		{

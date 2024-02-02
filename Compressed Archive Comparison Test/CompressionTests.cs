@@ -1,8 +1,9 @@
-using CompressedArchiveComparison;
+using CompressedArchiveComparison.Components;
+using CompressedArchiveComparison.Compressions;
 
 namespace CompressedArchiveComparisonTests
 {
-	[TestClass]
+    [TestClass]
 	public class CompressionTests
 	{
 		[TestMethod]

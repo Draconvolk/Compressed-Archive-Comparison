@@ -1,9 +1,9 @@
 ﻿using CompressedArchiveComparison;
-using CompressedArchiveComparison.Interfaces;
+using CompressedArchiveComparison.Config;
 
 namespace CompressedArchiveComparisonTests
 {
-	public static class TestData
+    public static class TestData
 	{
 		public static readonly string TestInfoJson = "{\r\n\t\"CompressedSource\": \"SourceDir\",\r\n\t\"DeployDestination\": \"DestinationDir\",\r\n\t\"ExclusionsFileName\": \"TestExclusions.txt\",\r\n\t\"ExportFileName\": \"MissingFilesFound.txt\",\r\n\t\"Verbose\": true\r\n}\r\n";
 		public static readonly IInfo ValidFolderInfo = new ConfigurationInfo()

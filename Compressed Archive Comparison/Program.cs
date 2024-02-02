@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using CompressedArchiveComparison;
+using CompressedArchiveComparison.Components;
+using CompressedArchiveComparison.Config;
 
 var workflow = new Workflow(new ConfigurationInfo());
 var configName = "Config.json";
