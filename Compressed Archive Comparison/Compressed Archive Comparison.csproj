@@ -12,19 +12,28 @@
     <PackageProjectUrl>https://github.com/Draconvolk/Skyrim-Mod-Verification</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Draconvolk/Skyrim-Mod-Verification</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
-    <AssemblyVersion>0.1.5</AssemblyVersion>
-    <FileVersion>0.1.5</FileVersion>
+    <AssemblyVersion>0.1.7</AssemblyVersion>
+    <FileVersion>0.1.7</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MSTest" Version="3.2.0" />
     <PackageReference Include="SharpCompress" Version="0.36.0" />
+    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="Config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Exclusions.txt">
+		<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Implementations\ICompressedReadonlyReaders\" />
+    <Folder Include="Implementations\ICompressions\" />
   </ItemGroup>
 
 </Project>

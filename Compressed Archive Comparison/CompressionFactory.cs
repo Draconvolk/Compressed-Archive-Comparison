@@ -1,6 +1,8 @@
-﻿namespace CompressedArchiveComparison
+﻿using CompressedArchiveComparison.Interfaces;
+
+namespace CompressedArchiveComparison
 {
-	public class CompressionFactory
+    public class CompressionFactory
 	{
 		public const string zip = ".zip";
 		public const string sevenZ = ".7z";
@@ -25,7 +27,7 @@
 				rar => new RarCompression(fileName),
 				sevenZ => new SevenZipCompression(fileName),
 				zip => new ZipCompression(fileName),
-				_ => new ZipCompression(fileName)
+				_ => new SevenZipCompression(fileName)
 			};
 		}
 	}

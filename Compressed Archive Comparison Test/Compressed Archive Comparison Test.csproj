@@ -31,6 +31,9 @@
 		<None Update="DestinationDir\TestDir2\TestFile1.txt">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+		<None Update="TestExclusions.txt">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
 		<None Update="SourceDir\TestDir2.7z">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>

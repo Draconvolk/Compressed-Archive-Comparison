@@ -34,10 +34,10 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public void B_GetInfoFromJson_Correct_Value()
+		public async Task B_GetInfoFromJson_Correct_Value()
 		{
 			var defaultValue = "TestInfo.Json";
-			var result = Workflow.GetInfoFromJson(defaultValue);
+			var result = await Workflow.GetInfoFromJson(defaultValue);
 
 			Assert.IsNotNull(result);
 			Assert.AreEqual(TestData.ValidFolderInfo.CompressedSource, result.CompressedSource);
@@ -47,12 +47,12 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public void B_LoadConfig_Correct_Value()
+		public async Task B_LoadConfig_Correct_Value()
 		{
 			var defaultValue = "TestInfo.Json";
 			var workflow = new Workflow(TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
-			workflow.LoadConfig();
+			await workflow.LoadConfig();
 			var result = workflow.ConfigInfo;
 
 			Assert.IsNotNull(result);
@@ -63,17 +63,30 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public async Task C_LoadCompressedSource_Value()
+		public async Task C_LoadCompressedSource_Correct_Value()
 		{
 			var defaultValue = "TestInfo.Json";
 			var workflow = new Workflow(TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
-			workflow.LoadConfig();
-			await workflow.LoadCompressedSource();
+			await workflow.LoadConfig();
+			workflow.LoadCompressedSource();
 			var sourceList = workflow.SourceList;
 			var expectedResult = TestData.LoadCompressedSourceExpectedValue;
 
-			Utilities.AssertAreEqual(sourceList, expectedResult);
+			Utilities.AssertAreEqual(expectedResult, sourceList);
+		}
+
+		[TestMethod]
+		public async Task C_GetFileList_Correct_Value()
+		{
+			var defaultValue = "TestInfo.Json";
+			var workflow = new Workflow(TestData.ValidFolderInfo);
+			workflow.SetConfig([], defaultValue);
+			await workflow.LoadConfig();
+			var sourceList = Workflow.GetFileList(workflow.ConfigInfo);
+			var expectedResult = TestData.LoadCompressedSourceExpectedValue;
+
+			Utilities.AssertAreEqual(expectedResult, sourceList);
 		}
 
 		[TestMethod]
@@ -82,29 +95,82 @@ namespace CompressedArchiveComparisonTests
 			var defaultValue = "TestInfo.Json";
 			var workflow = new Workflow(TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
-			workflow.LoadConfig();
-			await workflow.LoadCompressedSource();
-			await workflow.LoadDestination();
-			var destinationList = workflow.DestinationList;
+			await workflow.LoadConfig();
+			workflow.LoadCompressedSource();
+			workflow.LoadDestination();
+			var destinationList = workflow.DestinationList.OrderBy(x => x);
 			var expectedResult = TestData.LoadDestinationExpectedValue;
 
-			Utilities.AssertAreEqual(destinationList, expectedResult, true);
+			Utilities.AssertAreEqual(expectedResult, destinationList);
 		}
 
 		[TestMethod]
-		public async Task E_IdentifyMissingFiles_Value()
+		public async Task E_IdentifyMissingFiles_Correct_Value()
 		{
 			var defaultValue = "TestInfo.Json";
 			var workflow = new Workflow(TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
-			workflow.LoadConfig();
-			await workflow.LoadCompressedSource();
-			await workflow.LoadDestination();
-			await workflow.IdentifyMissingFiles();
-			var missingFiles = workflow.MissingFiles;
+			await workflow.LoadConfig();
+			var tasks = new Task[]
+			{
+				Task.Factory.StartNew(workflow.LoadCompressedSource),
+				Task.Factory.StartNew(workflow.LoadDestination)
+			};
+			Task.WaitAll(tasks);
+			workflow.IdentifyMissingFiles();
+			var missingFiles = workflow.MissingFiles.OrderBy(x => x);
 			var expectedResult = TestData.IdentifyMissingFilesExpectedValue;
 
-			Utilities.AssertAreEqual(missingFiles, expectedResult, true);
+			Utilities.AssertAreEqual(expectedResult, missingFiles);
+		}
+
+		[TestMethod]
+		public async Task F_ExportMissingFiles_Correct_Value()
+		{
+			var defaultValue = "TestInfo.Json";
+			var workflow = new Workflow(TestData.ValidFolderInfo);
+			workflow.SetConfig([], defaultValue);
+			await workflow.LoadConfig();
+			var tasks = new Task[]
+			{
+				Task.Factory.StartNew(workflow.LoadCompressedSource),
+				Task.Factory.StartNew(workflow.LoadDestination)
+			};
+			Task.WaitAll(tasks);
+			workflow.IdentifyMissingFiles();
+			await workflow.ExportMissingFiles();
+			var writtenResult = await File.ReadAllTextAsync(TestData.NormalizedEmptyFileName);
+			var expectedResult = "The Following files were missing from the destination:"
+								 + Environment.NewLine
+								 + TestData.IdentifyMissingFilesExpectedValue.OrderBy(x => x).FlattenToString(Environment.NewLine)
+								 + Environment.NewLine;
+
+			Assert.AreEqual(expectedResult, writtenResult);
+		}
+
+
+		[TestMethod]
+		public async Task F_ExportToFile_Data_Correct_Value()
+		{
+			var defaultValue = "TestInfo.Json";
+			var workflow = new Workflow(TestData.ValidFolderInfo);
+			workflow.SetConfig([], defaultValue);
+			await workflow.LoadConfig();
+			var tasks = new Task[]
+			{
+				Task.Factory.StartNew(workflow.LoadCompressedSource),
+				Task.Factory.StartNew(workflow.LoadDestination)
+			};
+			Task.WaitAll(tasks);
+			workflow.IdentifyMissingFiles();
+			await Workflow.ExportToFile(workflow.MissingFiles, workflow.ConfigInfo);
+			var writtenResult = await File.ReadAllTextAsync(TestData.NormalizedEmptyFileName);
+			var expectedResult = "The Following files were missing from the destination:"
+								 + Environment.NewLine
+								 + TestData.IdentifyMissingFilesExpectedValue.OrderBy(x => x).FlattenToString(Environment.NewLine)
+								 + Environment.NewLine;
+
+			Assert.AreEqual(expectedResult, writtenResult);
 		}
 	}
 }

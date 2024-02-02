@@ -1,31 +1,47 @@
 ﻿using CompressedArchiveComparison;
+using CompressedArchiveComparison.Interfaces;
 
 namespace CompressedArchiveComparisonTests
 {
 	public static class TestData
 	{
-		public static readonly string TestInfoJson = "{\r\n\t\"CompressedSource\": \"SourceDir\",\r\n\t\"DeployDestination\": \"DestinationDir\",\r\n\t\"ExportFileName\": \"MissingFilesFound.txt\",\r\n\t\"Verbose\": true\r\n}\r\n";
+		public static readonly string TestInfoJson = "{\r\n\t\"CompressedSource\": \"SourceDir\",\r\n\t\"DeployDestination\": \"DestinationDir\",\r\n\t\"ExclusionsFileName\": \"TestExclusions.txt\",\r\n\t\"ExportFileName\": \"MissingFilesFound.txt\",\r\n\t\"Verbose\": true\r\n}\r\n";
 		public static readonly IInfo ValidFolderInfo = new ConfigurationInfo()
 		{
-			CompressedSource = @"SourceDir",
-			DeployDestination = @"DestinationDir",
-			ExportFileName = @"MissingFilesFound.txt",
+			CompressedSource = "SourceDir",
+			DeployDestination = "DestinationDir",
+			ExclusionsFileName = "TestExclusions.txt",
+			ExportFileName = "MissingFilesFound.txt",
 			Verbose = true
 		};
 		public static readonly IInfo EmptyFolderInfo = new ConfigurationInfo()
 		{
 			CompressedSource = "",
 			DeployDestination = "",
-			ExportFileName = @"",
+			ExclusionsFileName = "",
+			ExportFileName = "",
 			Verbose = false
 		};
 		public static readonly IInfo BadFolderInfo = new ConfigurationInfo()
 		{
-			CompressedSource = @"Unknown Folder",
-			DeployDestination = @"Second Unknown Folder",
-			ExportFileName = @"MissingFilesFound.bat",
+			CompressedSource = "Unknown Folder",
+			DeployDestination = "Second Unknown Folder",
+			ExclusionsFileName = "BadExclusions.bat",
+			ExportFileName = "MissingFilesFound.bat",
 			Verbose = false
 		};
+		public static readonly IInfo ExpectedDefaultInfo = new ConfigurationInfo()
+		{
+			CompressedSource = "",
+			DeployDestination = "",
+			ExclusionsFileName = "Exclusions.txt",
+			ExportFileName = "MissingFilesFound.txt",
+			Verbose = false
+		};
+		public static readonly List<string> ExclusionFileList = [
+			"TestDir2.7z",
+			"TestZip.zip"
+		];
 		public static readonly string ValidPath = Environment.CurrentDirectory;
 		public static readonly string ValidSourceDir = Path.Combine(ValidPath, "SourceDir");
 		public static readonly string ValidDestinationDir = Path.Combine(ValidPath, "DestinationDir");
@@ -40,6 +56,7 @@ namespace CompressedArchiveComparisonTests
 		{
 			CompressedSource = ValidSourceDir,
 			DeployDestination = ValidDestinationDir,
+			ExclusionsFileName = "TestExclusions.txt",
 			ExportFileName = "MissingFilesFound.txt",
 			Verbose = true
 		};
@@ -88,6 +105,7 @@ namespace CompressedArchiveComparisonTests
 		{
 			CompressedSource = ValidSourceDir,
 			DeployDestination = ValidDestinationDir,
+			ExclusionsFileName = $"{ValidPath}\\TestExclusions.txt",
 			ExportFileName = $"{ValidPath}\\MissingFilesFound.txt",
 			Verbose = false
 		};
