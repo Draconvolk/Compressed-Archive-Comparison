@@ -2,7 +2,7 @@
 
 namespace CompressedArchiveComparisonTests
 {
-    [TestClass]
+	[TestClass]
 	public class DirectoryTests
 	{
 		[TestMethod]
@@ -17,7 +17,7 @@ namespace CompressedArchiveComparisonTests
 		public void A_GetDirectoryFileList_Content_Verified()
 		{
 			var result = DataProcessing.GetDirectoryFileList(TestData.TestDirInfo).OrderBy(x => x);
-			var expectedResult = TestData.FullPathResultList;
+			var expectedResult = TestData.FullPathList_Result;
 
 			Assert.IsNotNull(result);
 			Utilities.AssertAreEqual(expectedResult, result);
@@ -46,8 +46,8 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public void C_AddPathtoValue_Correct_Value()
 		{
-			var result = DataProcessing.AddPathToValue(TestData.ExpectedResultList, TestData.PathToAdd, "\\");
-			var expectedResult = TestData.RelativePathResultList;
+			var result = DataProcessing.AddPathToValue(TestData.RelativePathList, TestData.PathToAdd, "\\");
+			var expectedResult = TestData.RelativePathList_Result;
 
 			Assert.IsNotNull(result);
 			result = result.OrderBy(x => x);
@@ -57,7 +57,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public void D_GetMissingSourceFiles_Correct_Value()
 		{
-			var result = DataProcessing.GetMissingSourceFiles(TestData.FullPathSourcetList, TestData.FullPathResultList);
+			var result = DataProcessing.GetMissingSourceFiles(TestData.FullPathSourcetList, TestData.FullPathList_Result);
 			var expectedResult = TestData.FullPathMissingList;
 
 			Assert.IsNotNull(result);
@@ -68,7 +68,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public async Task D_DetermineMissingFiles_Correct_Value()
 		{
-			var result = await DataProcessing.DetermineMissingFiles(TestData.FullPathSourcetList[0], TestData.FullPathResultList);
+			var result = await DataProcessing.DetermineMissingFiles(TestData.FullPathSourcetList[0], TestData.FullPathList_Result);
 			var expectedResult = TestData.FullPathMissingList.Take(3).ToList();
 
 			Assert.IsNotNull(result);
@@ -128,10 +128,21 @@ namespace CompressedArchiveComparisonTests
 		public void F_OnlyFiles_Correct_Value()
 		{
 			var result = DataProcessing.OnlyFiles(TestData.SourceCompressedFullList);
-			var expectedResult = TestData.ExpectedSourceCompressedOnlyFilesList;
+			var expectedResult = TestData.SourceCompressedOnlyFilesList_Result;
 
 			Assert.IsNotNull(result);
 			Utilities.AssertAreEqual(expectedResult, result);
+		}
+
+		[TestMethod]
+		public async Task G_FilterMissingFiles_Correct_Value()
+		{
+			var result = await DataProcessing.FilterMissingFiles(TestData.DestinationFilteredList, TestData.SourceCompressedOnlyFilesList_Result);
+			var expectedResult = TestData.DestinationFilteredMissingList;
+
+			Assert.IsNotNull(result);
+			result = result.OrderBy(x => x);
+			Utilities.AssertAreEqual(expectedResult, result, true);
 		}
 
 		[TestMethod]
@@ -208,7 +219,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public async Task J_FilterDestination_No_Results_Correct_Value()
 		{
-			var result = await DataProcessing.FilterDestination(TestData.FullPathResultList, TestData.FilterFolderNoResults);
+			var result = await DataProcessing.FilterDestination(TestData.FullPathList_Result, TestData.FilterFolderNoResults);
 
 			Assert.IsNotNull(result);
 			Assert.AreEqual(0, result.Count());

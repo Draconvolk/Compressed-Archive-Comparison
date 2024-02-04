@@ -69,11 +69,14 @@ namespace CompressedArchiveComparisonTests
 			var workflow = new Workflow(TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
 			await workflow.LoadConfig();
-			workflow.LoadCompressedSource();
+			await workflow.LoadCompressedSource();
 			var sourceList = workflow.SourceList;
-			var expectedResult = TestData.LoadCompressedSourceExpectedValue;
+			var exclusionList = workflow.ExclusionList;
+			var expectedResult = TestData.FilteredSourceList;
+			var expectedResult2 = TestData.ExclusionFileList;
 
 			Utilities.AssertAreEqual(expectedResult, sourceList);
+			Utilities.AssertAreEqual(expectedResult2, exclusionList);
 		}
 
 		[TestMethod]
@@ -84,7 +87,7 @@ namespace CompressedArchiveComparisonTests
 			workflow.SetConfig([], defaultValue);
 			await workflow.LoadConfig();
 			var sourceList = Workflow.GetFileList(workflow.ConfigInfo);
-			var expectedResult = TestData.LoadCompressedSourceExpectedValue;
+			var expectedResult = TestData.CompressedSourceUnFiltered_Result;
 
 			Utilities.AssertAreEqual(expectedResult, sourceList);
 		}
@@ -96,10 +99,10 @@ namespace CompressedArchiveComparisonTests
 			var workflow = new Workflow(TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
 			await workflow.LoadConfig();
-			workflow.LoadCompressedSource();
+			await workflow.LoadCompressedSource();
 			workflow.LoadDestination();
 			var destinationList = workflow.DestinationList.OrderBy(x => x);
-			var expectedResult = TestData.LoadDestinationExpectedValue;
+			var expectedResult = TestData.LoadDestination_Result;
 
 			Utilities.AssertAreEqual(expectedResult, destinationList);
 		}
@@ -119,9 +122,37 @@ namespace CompressedArchiveComparisonTests
 			Task.WaitAll(tasks);
 			workflow.IdentifyMissingFiles();
 			var missingFiles = workflow.MissingFiles.OrderBy(x => x);
-			var expectedResult = TestData.IdentifyMissingFilesExpectedValue;
+			var expectedResult = TestData.IdentifyMissingFiles_Result;
 
 			Utilities.AssertAreEqual(expectedResult, missingFiles);
+		}
+
+		[TestMethod]
+		public async Task E_GetFileExclusions_Correct_Value()
+		{
+			var defaultValue = "TestInfo.Json";
+			var workflow = new Workflow(TestData.ValidFolderInfo);
+			workflow.SetConfig([], defaultValue);
+			await workflow.LoadConfig();
+			var exclusionList = await Workflow.GetFileExclusions(workflow.ConfigInfo);
+			var expectedResult = TestData.ExclusionFileList;
+
+			Utilities.AssertAreEqual(expectedResult, exclusionList);
+		}
+
+		[TestMethod]
+		public async Task E_FilterSourceList_Correct_Value()
+		{
+			var defaultValue = "TestInfo.Json";
+			var workflow = new Workflow(TestData.ValidFolderInfo);
+			workflow.SetConfig([], defaultValue);
+			await workflow.LoadConfig();
+			var exclusionList = await Workflow.GetFileExclusions(workflow.ConfigInfo);
+			var sourceList = Workflow.GetFileList(workflow.ConfigInfo);
+			var filteredSource= Workflow.FilterSourceList(sourceList, exclusionList);
+			var expectedResult = TestData.FilteredSourceList;
+
+			Utilities.AssertAreEqual(expectedResult, filteredSource);
 		}
 
 		[TestMethod]
@@ -142,12 +173,11 @@ namespace CompressedArchiveComparisonTests
 			var writtenResult = await File.ReadAllTextAsync(TestData.NormalizedEmptyFileName);
 			var expectedResult = "The Following files were missing from the destination:"
 								 + Environment.NewLine
-								 + TestData.IdentifyMissingFilesExpectedValue.OrderBy(x => x).FlattenToString(Environment.NewLine)
+								 + TestData.IdentifyMissingFiles_Result.OrderBy(x => x).FlattenToString(Environment.NewLine)
 								 + Environment.NewLine;
 
 			Assert.AreEqual(expectedResult, writtenResult);
 		}
-
 
 		[TestMethod]
 		public async Task F_ExportToFile_Data_Correct_Value()
@@ -167,7 +197,7 @@ namespace CompressedArchiveComparisonTests
 			var writtenResult = await File.ReadAllTextAsync(TestData.NormalizedEmptyFileName);
 			var expectedResult = "The Following files were missing from the destination:"
 								 + Environment.NewLine
-								 + TestData.IdentifyMissingFilesExpectedValue.OrderBy(x => x).FlattenToString(Environment.NewLine)
+								 + TestData.IdentifyMissingFiles_Result.OrderBy(x => x).FlattenToString(Environment.NewLine)
 								 + Environment.NewLine;
 
 			Assert.AreEqual(expectedResult, writtenResult);

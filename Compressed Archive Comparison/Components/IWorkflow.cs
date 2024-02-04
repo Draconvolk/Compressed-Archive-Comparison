@@ -30,7 +30,7 @@
 		/// <summary>
 		/// Read and store the names of all the compressed files in the source folder
 		/// </summary>
-		public void LoadCompressedSource();
+		public Task LoadCompressedSource();
 
 		/// <summary>
 		/// Read and Deserialize the specified Json file into the IInfo Config property

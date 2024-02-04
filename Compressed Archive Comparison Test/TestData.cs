@@ -3,7 +3,7 @@ using CompressedArchiveComparison.Config;
 
 namespace CompressedArchiveComparisonTests
 {
-    public static class TestData
+	public static class TestData
 	{
 		public static readonly string TestInfoJson = "{\r\n\t\"CompressedSource\": \"SourceDir\",\r\n\t\"DeployDestination\": \"DestinationDir\",\r\n\t\"ExclusionsFileName\": \"TestExclusions.txt\",\r\n\t\"ExportFileName\": \"MissingFilesFound.txt\",\r\n\t\"Verbose\": true\r\n}\r\n";
 		public static readonly IInfo ValidFolderInfo = new ConfigurationInfo()
@@ -30,7 +30,7 @@ namespace CompressedArchiveComparisonTests
 			ExportFileName = "MissingFilesFound.bat",
 			Verbose = false
 		};
-		public static readonly IInfo ExpectedDefaultInfo = new ConfigurationInfo()
+		public static readonly IInfo DefaultInfo_Result = new ConfigurationInfo()
 		{
 			CompressedSource = "",
 			DeployDestination = "",
@@ -39,9 +39,15 @@ namespace CompressedArchiveComparisonTests
 			Verbose = false
 		};
 		public static readonly List<string> ExclusionFileList = [
-			"TestDir2.7z",
+			"TestSevenZip.7z",
 			"TestZip.zip"
 		];
+		public static readonly List<string> FilteredSourceList = [
+			"SourceDir\\TestDir1.7z",
+			"SourceDir\\TestDir2.7z",
+			"SourceDir\\TestRar.rar",
+		];		
+		public static readonly string EmptyExclusions = "TestEmptyExclusions.txt";
 		public static readonly string ValidPath = Environment.CurrentDirectory;
 		public static readonly string ValidSourceDir = Path.Combine(ValidPath, "SourceDir");
 		public static readonly string ValidDestinationDir = Path.Combine(ValidPath, "DestinationDir");
@@ -60,15 +66,7 @@ namespace CompressedArchiveComparisonTests
 			ExportFileName = "MissingFilesFound.txt",
 			Verbose = true
 		};
-		public static readonly List<string> ValidSourceList = [
-			"Source\\TestDir1\\NestedDir1\\TestFile3.txt",
-			"Source\\TestDir1\\NestedDir1\\TestFile4.txt",
-			"Source\\TestDir1\\NestedDir1\\TestFile5.txt",
-			"Source\\TestDir1\\NestedDir2\\TestFile6.txt",
-			"Source\\TestDir1\\TestFile1.txt",
-			"Source\\TestDir1\\TestFile2.txt"
-		];
-		public static readonly List<string> ExpectedResultList = [
+		public static readonly List<string> RelativePathList = [
 			"TestDir1\\NestedDir1\\TestFile3.txt",
 			"TestDir1\\NestedDir1\\TestFile4.txt",
 			"TestDir1\\NestedDir1\\TestFile5.txt",
@@ -78,7 +76,7 @@ namespace CompressedArchiveComparisonTests
 		];
 		public static readonly string SourceToRemove = "Source\\";
 		public static readonly string PathToAdd = $"{ValidDestinationDir}\\TestDir1.7z";
-		public static readonly List<string> RelativePathResultList = [
+		public static readonly List<string> RelativePathList_Result = [
 			$"{PathToAdd}\\TestDir1\\NestedDir1\\TestFile3.txt",
 			$"{PathToAdd}\\TestDir1\\NestedDir1\\TestFile4.txt",
 			$"{PathToAdd}\\TestDir1\\NestedDir1\\TestFile5.txt",
@@ -86,7 +84,7 @@ namespace CompressedArchiveComparisonTests
 			$"{PathToAdd}\\TestDir1\\TestFile1.txt",
 			$"{PathToAdd}\\TestDir1\\TestFile2.txt"
 		];
-		public static readonly List<string> FullPathResultList = [
+		public static readonly List<string> FullPathList_Result = [
 			$"{ValidDestinationDir}\\TestDir1\\NestedDir1\\TestFile3.txt",
 			$"{ValidDestinationDir}\\TestDir1\\NestedDir1\\TestFile4.txt",
 			$"{ValidDestinationDir}\\TestDir1\\NestedDir1\\TestFile5.txt",
@@ -124,22 +122,30 @@ namespace CompressedArchiveComparisonTests
 			"TestDir1\\NestedDir1\\TestFile3.txt",
 			"TestDir1\\NestedDir1\\TestFile4.txt",
 			"TestDir1\\NestedDir1\\TestFile5.txt",
+			"TestDir1\\NestedDir1\\TestFile8.txt",
 			"TestDir1\\NestedDir2",
 			"TestDir1\\NestedDir2\\TestFile6.txt",
+			"TestDir1\\NestedDir2\\TestFile9.txt",
 			"TestDir1\\TestFile1.txt",
-			"TestDir1\\TestFile2.txt"
+			"TestDir1\\TestFile2.txt",
+			"TestDir1\\TestFile7.txt"
 		];
-		public static readonly List<string> ExpectedSourceCompressedOnlyFilesList = [
+		public static readonly List<string> SourceCompressedOnlyFilesList_Result = [
 			"TestDir1\\NestedDir1\\TestFile3.txt",
 			"TestDir1\\NestedDir1\\TestFile4.txt",
 			"TestDir1\\NestedDir1\\TestFile5.txt",
+			"TestDir1\\NestedDir1\\TestFile8.txt",
 			"TestDir1\\NestedDir2\\TestFile6.txt",
+			"TestDir1\\NestedDir2\\TestFile9.txt",
 			"TestDir1\\TestFile1.txt",
-			"TestDir1\\TestFile2.txt"
+			"TestDir1\\TestFile2.txt",
+			"TestDir1\\TestFile7.txt"
 		];
 		public static readonly List<string> DestinationFullList = [
 			$"{ValidDestinationDir}\\TestDir1\\NestedDir1\\TestFile3.txt",
 			$"{ValidDestinationDir}\\TestDir1\\NestedDir1\\TestFile4.txt",
+			$"{ValidDestinationDir}\\TestDir1\\NestedDir1\\TestFile5.txt",
+			$"{ValidDestinationDir}\\TestDir1\\NestedDir2\\TestFile6.txt",
 			$"{ValidDestinationDir}\\TestDir1\\TestFile1.txt",
 			$"{ValidDestinationDir}\\TestDir1\\TestFile2.txt",
 			$"{ValidDestinationDir}\\TestDir2\\NestedDir1\\TestFile2.txt",
@@ -148,21 +154,29 @@ namespace CompressedArchiveComparisonTests
 			$"{ValidDestinationDir}\\TestDir3\\NestedDir3\\TestFile5.txt",
 			$"{ValidDestinationDir}\\TestDir3\\TestFile2.txt"
 		];
-		public static readonly string FilterFolder = "TestDir2";
+		public static readonly string FilterFolder = "TestDir1";
 		public static readonly string FilterFolderNoResults = "TestDir4";
 		public static readonly List<string> DestinationFilteredList = [
-			$"{ValidDestinationDir}\\TestDir2\\NestedDir1\\TestFile2.txt",
-			$"{ValidDestinationDir}\\TestDir2\\NestedDir3\\TestFile4.txt",
-			$"{ValidDestinationDir}\\TestDir2\\TestFile1.txt"
+			$"{ValidDestinationDir}\\TestDir1\\NestedDir1\\TestFile3.txt",
+			$"{ValidDestinationDir}\\TestDir1\\NestedDir1\\TestFile4.txt",
+			$"{ValidDestinationDir}\\TestDir1\\NestedDir1\\TestFile5.txt",
+			$"{ValidDestinationDir}\\TestDir1\\NestedDir2\\TestFile6.txt",
+			$"{ValidDestinationDir}\\TestDir1\\TestFile1.txt",
+			$"{ValidDestinationDir}\\TestDir1\\TestFile2.txt",
 		];
-		public static readonly List<string> LoadCompressedSourceExpectedValue = [
+		public static readonly List<string> DestinationFilteredMissingList = [
+			"TestDir1\\NestedDir1\\TestFile8.txt",
+			"TestDir1\\NestedDir2\\TestFile9.txt",
+			"TestDir1\\TestFile7.txt"
+		];
+		public static readonly List<string> CompressedSourceUnFiltered_Result = [
 			"SourceDir\\TestDir1.7z",
 			"SourceDir\\TestDir2.7z",
 			"SourceDir\\TestRar.rar",
 			"SourceDir\\TestSevenZip.7z",
 			"SourceDir\\TestZip.zip"
 		];
-		public static readonly List<string> LoadDestinationExpectedValue = [
+		public static readonly List<string> LoadDestination_Result = [
 			"DestinationDir\\TestDir1\\NestedDir1\\TestFile3.txt",
 			"DestinationDir\\TestDir1\\NestedDir1\\TestFile4.txt",
 			"DestinationDir\\TestDir1\\NestedDir1\\TestFile5.txt",
@@ -173,8 +187,7 @@ namespace CompressedArchiveComparisonTests
 			"DestinationDir\\TestDir2\\NestedDir3\\TestFile4.txt",
 			"DestinationDir\\TestDir2\\TestFile1.txt"
 		];
-
-		public static readonly List<string> IdentifyMissingFilesExpectedValue = [
+		public static readonly List<string> IdentifyMissingFiles_Result = [
 			"SourceDir\\TestDir1.7z|NestedDir1\\TestFile8.txt",
 			"SourceDir\\TestDir1.7z|NestedDir2\\TestFile9.txt",
 			"SourceDir\\TestDir1.7z|TestFile7.txt",
@@ -186,11 +199,7 @@ namespace CompressedArchiveComparisonTests
 			"SourceDir\\TestDir2.7z|NestedDir2\\TestFile9.txt",
 			"SourceDir\\TestDir2.7z|TestFile7.txt",
 			"SourceDir\\TestRar.rar|TestFile1.txt",
-			"SourceDir\\TestRar.rar|TestFile2.txt",
-			"SourceDir\\TestSevenZip.7z|TestFile1.txt",
-			"SourceDir\\TestSevenZip.7z|TestFile2.txt",
-			"SourceDir\\TestZip.zip|TestFile1.txt",
-			"SourceDir\\TestZip.zip|TestFile2.txt"
+			"SourceDir\\TestRar.rar|TestFile2.txt"
 			];
 	}
 }

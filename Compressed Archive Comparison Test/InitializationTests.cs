@@ -1,8 +1,9 @@
 using CompressedArchiveComparison.Components;
+using CompressedArchiveComparison.Config;
 
 namespace CompressedArchiveComparisonTests
 {
-    [TestClass]
+	[TestClass]
 	public class InitializationTests
 	{
 		[TestMethod]
@@ -57,7 +58,7 @@ namespace CompressedArchiveComparisonTests
 		public void B_GetAsInfo_Bad_Data_Handled(string testData)
 		{
 			var result = DataProcessing.GetAsInfo(testData);
-			var expectedResult = TestData.ExpectedDefaultInfo;
+			var expectedResult = TestData.DefaultInfo_Result;
 
 			Assert.IsNotNull(result);
 			Assert.AreEqual(expectedResult.CompressedSource, result.CompressedSource);
@@ -87,7 +88,7 @@ namespace CompressedArchiveComparisonTests
 		public void D_GetCompressedFilesList_Correct_Value()
 		{
 			var result = DataProcessing.GetCompressedFileList(TestData.ValidFolderInfo);
-			var expectedResult = TestData.LoadCompressedSourceExpectedValue;
+			var expectedResult = TestData.CompressedSourceUnFiltered_Result;
 
 			Assert.IsNotNull(result);
 			Utilities.AssertAreEqual(expectedResult, result);
@@ -133,9 +134,13 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public async Task E_GetExclusionFileText_NoName()
+		[DataRow("")]
+		[DataRow("TestEmptyExclusions.txt")]
+		[DataRow("BadFileName.bat")]
+		public async Task E_GetExclusionFileText_Empty_File(string testData)
 		{
-			var result = await DataProcessing.GetExclusionFileText(TestData.EmptyFolderInfo);
+			var testInfo = new ConfigurationInfo() { ExclusionsFileName = testData };
+			var result = await DataProcessing.GetExclusionFileText(testInfo);
 			var expectedResult = "";
 
 			Assert.IsNotNull(result);
@@ -155,7 +160,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		[DataRow(null)]
 		[DataRow("")]
-		[DataRow("BadFIleName.bat")]
+		[DataRow("BadFileName.bat")]
 		public async Task F_ReadFileData_Invalid(string testData)
 		{
 			var result = await DataProcessing.ReadFileData(testData);
@@ -166,11 +171,58 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public async Task G_GetExclusionFileText_Correct_Value()
+		public void G_ParseExclusionFileText_Correct_Value()
 		{
-			var text = await DataProcessing.GetExclusionFileText(TestData.TestDirInfo);
-			var result = DataProcessing.ParseExclusionFileText(text);
+			var flattenedData = TestData.ExclusionFileList.FlattenToString(Environment.NewLine);
+			var result = DataProcessing.ParseExclusionFileText(flattenedData, Environment.NewLine);
 			var expectedResult = TestData.ExclusionFileList;
+
+			Assert.IsNotNull(result);
+			Utilities.AssertAreEqual(expectedResult, result);
+		}
+
+		[TestMethod]
+		[DataRow(null)]
+		[DataRow("")]
+		public void G_ParseExclusionFileText_Bad_Data(string testData)
+		{
+			var result = DataProcessing.ParseExclusionFileText(testData, Environment.NewLine);
+
+			Assert.IsNotNull(result);
+			Assert.IsFalse(result.Any());
+		}
+
+		[TestMethod]
+		[DataRow("\r\n")]
+		[DataRow(", ")]
+		[DataRow("|")]
+		[DataRow(";")]
+		public void G_ParseExclusionFileText_Separator_Correct_Value(string testData)
+		{
+			var testText = TestData.ExclusionFileList.FlattenToString(testData);
+			var result = DataProcessing.ParseExclusionFileText(testText, testData);
+			var expectedResult = TestData.ExclusionFileList;
+
+			Assert.IsNotNull(result);
+			Utilities.AssertAreEqual(expectedResult, result);
+		}
+
+		[TestMethod]
+		public void G_ParseExclusionFileText_Separator_blank()
+		{
+			var testText = TestData.ExclusionFileList.FlattenToString(Environment.NewLine);
+			var result = DataProcessing.ParseExclusionFileText(testText, "");
+			var expectedResult = TestData.ExclusionFileList;
+
+			Assert.IsNotNull(result);
+			Utilities.AssertAreEqual(expectedResult, result);
+		}
+
+		[TestMethod]
+		public void H_FilterSourceList_Correct_Value()
+		{
+			var result = DataProcessing.FilterSourceList(TestData.CompressedSourceUnFiltered_Result, TestData.ExclusionFileList);
+			var expectedResult = TestData.FilteredSourceList;
 
 			Assert.IsNotNull(result);
 			Utilities.AssertAreEqual(expectedResult, result);

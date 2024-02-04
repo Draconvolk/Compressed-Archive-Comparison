@@ -1,2 +1,2 @@
-﻿TestDir2.7z
+﻿TestSevenZip.7z
 TestZip.zip
