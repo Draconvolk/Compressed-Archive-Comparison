@@ -1,17 +1,18 @@
-﻿using CompressedArchiveComparison.Interfaces;
+﻿using CompressedArchiveComparison.CompressedReadonlyReaders;
 
-namespace CompressedArchiveComparison
+namespace CompressedArchiveComparison.Compressions
 {
-	public abstract class AbstractCompressionBase(ICompressedReader reader, string fileName = "") : ICompression
+	public abstract class AbstractCompressionBase(ICompressedReader reader) : ICompression
 	{
-		public virtual string FileName { get; set; } = fileName;
+		public virtual string FileName { get; set; } = "";
 		public ICompressedReader Reader { get; set; } = reader;
-		public ParallelOptions ParaOptions { get; set; } = new() { };
 
 		public virtual IEnumerable<string> GetFiles() => !string.IsNullOrWhiteSpace(FileName) ? GetFiles(FileName) : [];
 
 		public virtual IEnumerable<string> GetFiles(string filePath) => Reader.Read(filePath);
 
 		public virtual string GetTypeName() => GetType().Name;
+
+		public virtual void SetFileName(string name) => FileName = name;
 	}
 }

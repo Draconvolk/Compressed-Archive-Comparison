@@ -1,8 +1,8 @@
-﻿using CompressedArchiveComparison.Interfaces;
+﻿using CompressedArchiveComparison.Config;
 using System.Collections.Concurrent;
 using System.Text.Json;
 
-namespace CompressedArchiveComparison
+namespace CompressedArchiveComparison.Components
 {
 	public static class DataProcessing
 	{
@@ -10,9 +10,29 @@ namespace CompressedArchiveComparison
 		/// Valid File Extensions for Output File to be written to
 		/// </summary>
 		public static readonly List<string> ValidFileExtensions = [".log", ".txt"];
+		public static readonly string DefaultSeparator = Environment.NewLine;
 
 		/// <summary>
-		/// Deserialize Json file values into a ConfigurationInfo object
+		/// Returns a collection of <paramref name="sourceList"/> values that don't exist in the <paramref name="exclusionList"/>,
+		/// or an empty string collection
+		/// </summary>
+		/// <param name="sourceList"></param>
+		/// <param name="exclusionList"></param>
+		/// <returns></returns>
+		public static IEnumerable<string> FilterSourceList(IEnumerable<string> sourceList, IEnumerable<string> exclusionList)
+		{
+			var filteredList = new List<string>();
+			if (sourceList == null || !sourceList.Any() || exclusionList == null || !exclusionList.Any())
+			{
+				return filteredList;
+			}
+			filteredList = [.. sourceList.Where(x => !exclusionList.Contains(GetFileName(x))).OrderBy(x => x)];
+
+			return filteredList;
+		}
+
+		/// <summary>
+		/// Deserialize Json text <paramref name="jsonData"/> into a <see cref="ConfigurationInfo"/> object
 		/// </summary>
 		/// <param name="jsonData"></param>
 		/// <returns></returns>
@@ -34,11 +54,11 @@ namespace CompressedArchiveComparison
 		}
 
 		/// <summary>
-		/// Get a collection of strings representing the content of the compressed filename passed in
+		/// Get a collection of <see cref="string"/> representing the content of the compressed filename <paramref name="filePath"/>
 		/// </summary>
 		/// <param name="filePath"></param>
 		/// <returns></returns>
-		public static IEnumerable<string> GetCompressedFileContent(string filePath)
+		public static IEnumerable<string> GetCompressedFileContent(CompressionResolver resolver, string filePath)
 		{
 			var files = new List<string>();
 			if (string.IsNullOrWhiteSpace(filePath))
@@ -47,8 +67,8 @@ namespace CompressedArchiveComparison
 			}
 			try
 			{
-				var compression = CompressionFactory.GetCompressionType(filePath);
-				if (compression == null) { return files; }				
+				var compression = CompressionFactory.GetCompressionType(resolver, filePath);
+				if (compression == null) { return files; }
 				Parallel.ForEach(compression.GetFiles(), files.Add);
 				return files.OrderBy(x => x);
 			}
@@ -60,7 +80,7 @@ namespace CompressedArchiveComparison
 		}
 
 		/// <summary>
-		/// Get a list of the compressed files to validate
+		/// Get a collection of the compressed files
 		/// </summary>
 		/// <param name="info"></param>
 		/// <returns></returns>
@@ -80,9 +100,8 @@ namespace CompressedArchiveComparison
 			return dirData.OrderBy(x => x);
 		}
 
-
 		/// <summary>
-		/// Get a collection of the names of all files of type <paramref name="type"/>
+		/// Get a collection of the names of all files of <paramref name="type"/> found in the <see cref="IInfo.CompressedSource"/> location
 		/// </summary>
 		/// <param name="info"></param>
 		/// <param name="type"></param>
@@ -102,7 +121,7 @@ namespace CompressedArchiveComparison
 		}
 
 		/// <summary>
-		/// Get a list of the files in the destination directory with full path info
+		/// Get a collection of the names of the files in the <see cref="IInfo.DeployDestination"/> directory with full path info
 		/// </summary>
 		/// <param name="info"></param>
 		/// <returns></returns>
@@ -125,7 +144,7 @@ namespace CompressedArchiveComparison
 		}
 
 		/// <summary>
-		/// Read the text content of info.ExclusionFileName
+		/// Read the text content of the file <see cref="IInfo.ExclusionsFileName"/>
 		/// </summary>
 		/// <param name="info"></param>
 		/// <returns></returns>
@@ -145,19 +164,19 @@ namespace CompressedArchiveComparison
 		}
 
 		/// <summary>
-		/// Get a list of which files in sourceList are missing from destinationList
+		/// Get a collection of the names of files in <paramref name="sourceList"/> which are missing from <paramref name="destinationList"/>
 		/// </summary>
 		/// <param name="sourceList"></param>
 		/// <param name="destinationList"></param>
 		/// <returns></returns>		
-		public static IEnumerable<string> GetMissingSourceFiles(IEnumerable<string> sourceList, IEnumerable<string> destinationList)
+		public static IEnumerable<string> GetMissingSourceFiles(CompressionResolver resolver, IEnumerable<string> sourceList, IEnumerable<string> destinationList)
 		{
 			var missingFileBag = new ConcurrentBag<string>();
 			var missingTasks = new List<Task>();
 			Parallel.ForEach(sourceList, file =>
 				missingTasks.Add(Task.Run(async () =>
 				{
-					var files = await DetermineMissingFiles(file, destinationList);
+					var files = await DetermineMissingFiles(resolver, file, destinationList);
 					foreach (var item in files)
 					{
 						missingFileBag.Add(item);
@@ -168,13 +187,17 @@ namespace CompressedArchiveComparison
 
 			var executeMissingTasks = new List<Task>();
 			var missingList = new ConcurrentBag<string>();
+			var addMissing = new object();
 			while (!missingFileBag.IsEmpty)
 			{
 				executeMissingTasks.Add(Task.Run(() =>
 				{
 					if (missingFileBag.TryTake(out var missingFile))
 					{
-						missingList.Add(missingFile);
+						lock (addMissing)
+						{
+							missingList.Add(missingFile);
+						}
 					}
 				}));
 			}
@@ -183,19 +206,19 @@ namespace CompressedArchiveComparison
 			return missingList.OrderBy(x => x);
 		}
 
-		/// <summary>
-		/// Get the list of files from inside the specified compressed file and 
-		/// compare that against the destination list to determine any that are missing
+		/// <summary>		
+		/// Get a collection of the names of files from inside the specified compressed <paramref name="file"/> 
+		/// and compares that against the <paramref name="destinationList"/> and returns a collection of those missing
 		/// </summary>
 		/// <param name="file"></param>
 		/// <param name="destinationList"></param>
 		/// <returns></returns>
-		public static async Task<IEnumerable<string>> DetermineMissingFiles(string file, IEnumerable<string> destinationList)
+		public static async Task<IEnumerable<string>> DetermineMissingFiles(CompressionResolver resolver, string file, IEnumerable<string> destinationList)
 		{
 			IEnumerable<string> justCompressedFiles = [];
 			var getCompressedTask = Task.Factory.StartNew(() =>
 			{
-				var compressedFileContent = GetCompressedFileContent(file);
+				var compressedFileContent = GetCompressedFileContent(resolver, file);
 				justCompressedFiles = OnlyFiles(compressedFileContent);
 			});
 			IEnumerable<string> targetDestList = [];
@@ -228,7 +251,7 @@ namespace CompressedArchiveComparison
 		}
 
 		/// <summary>
-		/// Returns just the filename, stripped of additional path 
+		/// Returns the filename, stripped of additional path 
 		/// </summary>
 		/// <param name="file"></param>
 		/// <returns></returns>
@@ -257,7 +280,7 @@ namespace CompressedArchiveComparison
 		}
 
 		/// <summary>
-		/// Filters the destinationList to only records including the targetFolder
+		/// Returns a collection of <paramref name="destinationList"/> values that contain <param
 		/// </summary>
 		/// <param name="destinationList"></param>
 		/// <param name="targetFolder"></param>
@@ -279,7 +302,7 @@ namespace CompressedArchiveComparison
 		}
 
 		/// <summary>
-		/// Filter out files that exist in the destination from the compressed collection
+		/// Returns a collection of <paramref name="justCompressedFiles"/> values that don't exist in <paramref name="targetDestList"/>
 		/// </summary>
 		/// <param name="targetDestList"></param>
 		/// <param name="justCompressedFiles"></param>
@@ -301,7 +324,7 @@ namespace CompressedArchiveComparison
 		}
 
 		/// <summary>
-		/// Adds the full path value to each item in the list with the specified separator
+		/// Adds the full <paramref name="addPath"/> value to each item in <paramref name="list"/> with the specified <paramref name="separator"/>
 		/// </summary>
 		/// <param name="list"></param>
 		/// <param name="addPath"></param>
@@ -311,7 +334,7 @@ namespace CompressedArchiveComparison
 			=> list.Select(y => $"{addPath}{separator}{y}");
 
 		/// <summary>
-		/// Validate Source and Destination values are not empty
+		/// Validate <see cref="IInfo.CompressedSource"/> and <see cref="IInfo.DeployDestination"/> values are not empty
 		/// </summary>
 		/// <param name="info"></param>
 		/// <returns></returns>
@@ -319,16 +342,20 @@ namespace CompressedArchiveComparison
 			=> !(info == null || string.IsNullOrWhiteSpace(info.CompressedSource) || string.IsNullOrWhiteSpace(info.DeployDestination));
 
 		/// <summary>
-		/// Get a collection of compressed files to ignore
+		/// Returns a collection of parsed values from <paramref name="exclusionText"/> separated by <paramref name="separator"/>
 		/// </summary>
 		/// <param name="exclusionText"></param>
 		/// <returns></returns>
-		public static IEnumerable<string> ParseExclusionFileText(string exclusionText)
+		public static IEnumerable<string> ParseExclusionFileText(string exclusionText, string separator)
 		{
 			var list = new List<string>();
+			separator = string.IsNullOrEmpty(separator) ? DefaultSeparator : separator;
 			try
 			{
-				list.AddRange(exclusionText.Split(' '));
+				if (!string.IsNullOrWhiteSpace(exclusionText))
+				{
+					list.AddRange(exclusionText.Split(separator));
+				}
 			}
 			catch
 			{
@@ -338,7 +365,7 @@ namespace CompressedArchiveComparison
 		}
 
 		/// <summary>
-		/// Read the json data from a file into a string
+		/// Read the JSON data from <paramref name="jsonPath"/> into a string
 		/// </summary>
 		/// <param name="jsonPath"></param>
 		/// <returns></returns>
@@ -363,7 +390,7 @@ namespace CompressedArchiveComparison
 		}
 
 		/// <summary>
-		/// Reads the text of the specified file as a single string
+		/// Reads the text of the file <paramref name="path"/> as a single string
 		/// </summary>
 		/// <param name="path"></param>
 		/// <returns></returns>
@@ -383,7 +410,7 @@ namespace CompressedArchiveComparison
 		}
 
 		/// <summary>
-		/// Writes the collection of string names to the file
+		/// Writes the collection <paramref name="asyncList"/> to file <paramref name="filePath"/>, one record per line
 		/// </summary>
 		/// <param name="list"></param>
 		/// <param name="filePath"></param>
@@ -401,8 +428,8 @@ namespace CompressedArchiveComparison
 				}
 				if (!asyncList.Any())
 				{
-					Console.WriteLine("No records were found to be missing. There is nothing to export");
-					return false;
+					await File.WriteAllTextAsync(filePath, "No records were found to be missing!");
+					return true;
 				}
 				await File.WriteAllTextAsync(filePath, "The Following files were missing from the destination:" + Environment.NewLine);
 				foreach (var file in asyncList)
@@ -420,8 +447,8 @@ namespace CompressedArchiveComparison
 		}
 
 		/// <summary>
-		/// Returns a normalized full path for the specified filename to export to,
-		/// or "" if a filepath not of type .log or .txt is given
+		/// Returns a normalized full path for the specified filename <paramref name="filePath"/> to export to,
+		/// or "" if <paramref name="filePath"/> not of type .log or .txt
 		/// </summary>
 		/// <param name="filePath"></param>
 		/// <returns></returns>

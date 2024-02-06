@@ -1,8 +1,8 @@
-﻿using CompressedArchiveComparison.Interfaces;
+﻿using CompressedArchiveComparison.Compressions;
 
-namespace CompressedArchiveComparison
+namespace CompressedArchiveComparison.Components
 {
-    public class CompressionFactory
+	public static class CompressionFactory
 	{
 		public const string zip = ".zip";
 		public const string sevenZ = ".7z";
@@ -13,7 +13,7 @@ namespace CompressedArchiveComparison
 		/// </summary>
 		/// <param name="fileName"></param>
 		/// <returns></returns>
-		public static ICompression? GetCompressionType(string fileName)
+		public static ICompression? GetCompressionType(CompressionResolver resolverAccessor, string fileName)
 		{
 			if (string.IsNullOrWhiteSpace(fileName) || fileName.LastIndexOf('.') == -1)
 			{
@@ -22,13 +22,9 @@ namespace CompressedArchiveComparison
 			}
 
 			var type = fileName[fileName.LastIndexOf('.')..];
-			return type switch
-			{
-				rar => new RarCompression(fileName),
-				sevenZ => new SevenZipCompression(fileName),
-				zip => new ZipCompression(fileName),
-				_ => new SevenZipCompression(fileName)
-			};
+			var compression = resolverAccessor(type);
+			compression.SetFileName(fileName);
+			return compression;
 		}
 	}
 }
