@@ -2,7 +2,7 @@
 
 namespace CompressedArchiveComparison.Compressions
 {
-	public class RarCompression(string fileName) : AbstractCompressionBase(new RarReader(), fileName), ICompression
+	public class RarCompression() : AbstractCompressionBase(new RarReader()), ICompression
 	{
 	}
 }

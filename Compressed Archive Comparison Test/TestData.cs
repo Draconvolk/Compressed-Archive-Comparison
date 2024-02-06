@@ -1,5 +1,4 @@
-﻿using CompressedArchiveComparison;
-using CompressedArchiveComparison.Config;
+﻿using CompressedArchiveComparison.Config;
 
 namespace CompressedArchiveComparisonTests
 {

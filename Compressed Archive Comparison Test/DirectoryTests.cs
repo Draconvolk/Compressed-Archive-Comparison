@@ -5,6 +5,10 @@ namespace CompressedArchiveComparisonTests
 	[TestClass]
 	public class DirectoryTests
 	{
+		private readonly CompressionResolver _resolver;
+
+		public DirectoryTests() => _resolver = Utilities.GetCompressionResolver() ?? throw new Exception("Failed to load Compression Resolver");
+
 		[TestMethod]
 		public void A_GetDirectoryFileList_Not_Null()
 		{
@@ -57,7 +61,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public void D_GetMissingSourceFiles_Correct_Value()
 		{
-			var result = DataProcessing.GetMissingSourceFiles(TestData.FullPathSourcetList, TestData.FullPathList_Result);
+			var result = DataProcessing.GetMissingSourceFiles(_resolver, TestData.FullPathSourcetList, TestData.FullPathList_Result);
 			var expectedResult = TestData.FullPathMissingList;
 
 			Assert.IsNotNull(result);
@@ -68,7 +72,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public async Task D_DetermineMissingFiles_Correct_Value()
 		{
-			var result = await DataProcessing.DetermineMissingFiles(TestData.FullPathSourcetList[0], TestData.FullPathList_Result);
+			var result = await DataProcessing.DetermineMissingFiles(_resolver, TestData.FullPathSourcetList[0], TestData.FullPathList_Result);
 			var expectedResult = TestData.FullPathMissingList.Take(3).ToList();
 
 			Assert.IsNotNull(result);

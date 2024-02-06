@@ -54,11 +54,11 @@ namespace CompressedArchiveComparison.Components
 		}
 
 		/// <summary>
-		/// Get a collection of  <see cref="string"/>s representing the content of the compressed filename <paramref name="filePath"/>
+		/// Get a collection of <see cref="string"/> representing the content of the compressed filename <paramref name="filePath"/>
 		/// </summary>
 		/// <param name="filePath"></param>
 		/// <returns></returns>
-		public static IEnumerable<string> GetCompressedFileContent(string filePath)
+		public static IEnumerable<string> GetCompressedFileContent(CompressionResolver resolver, string filePath)
 		{
 			var files = new List<string>();
 			if (string.IsNullOrWhiteSpace(filePath))
@@ -67,7 +67,7 @@ namespace CompressedArchiveComparison.Components
 			}
 			try
 			{
-				var compression = CompressionFactory.GetCompressionType(filePath);
+				var compression = CompressionFactory.GetCompressionType(resolver, filePath);
 				if (compression == null) { return files; }
 				Parallel.ForEach(compression.GetFiles(), files.Add);
 				return files.OrderBy(x => x);
@@ -169,14 +169,14 @@ namespace CompressedArchiveComparison.Components
 		/// <param name="sourceList"></param>
 		/// <param name="destinationList"></param>
 		/// <returns></returns>		
-		public static IEnumerable<string> GetMissingSourceFiles(IEnumerable<string> sourceList, IEnumerable<string> destinationList)
+		public static IEnumerable<string> GetMissingSourceFiles(CompressionResolver resolver, IEnumerable<string> sourceList, IEnumerable<string> destinationList)
 		{
 			var missingFileBag = new ConcurrentBag<string>();
 			var missingTasks = new List<Task>();
 			Parallel.ForEach(sourceList, file =>
 				missingTasks.Add(Task.Run(async () =>
 				{
-					var files = await DetermineMissingFiles(file, destinationList);
+					var files = await DetermineMissingFiles(resolver, file, destinationList);
 					foreach (var item in files)
 					{
 						missingFileBag.Add(item);
@@ -213,12 +213,12 @@ namespace CompressedArchiveComparison.Components
 		/// <param name="file"></param>
 		/// <param name="destinationList"></param>
 		/// <returns></returns>
-		public static async Task<IEnumerable<string>> DetermineMissingFiles(string file, IEnumerable<string> destinationList)
+		public static async Task<IEnumerable<string>> DetermineMissingFiles(CompressionResolver resolver, string file, IEnumerable<string> destinationList)
 		{
 			IEnumerable<string> justCompressedFiles = [];
 			var getCompressedTask = Task.Factory.StartNew(() =>
 			{
-				var compressedFileContent = GetCompressedFileContent(file);
+				var compressedFileContent = GetCompressedFileContent(resolver, file);
 				justCompressedFiles = OnlyFiles(compressedFileContent);
 			});
 			IEnumerable<string> targetDestList = [];

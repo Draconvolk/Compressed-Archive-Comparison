@@ -2,7 +2,7 @@
 
 namespace CompressedArchiveComparison.Compressions
 {
-	public class SevenZipCompression(string fileName) : AbstractCompressionBase(new SevenZipReader(), fileName), ICompression
+	public class SevenZipCompression() : AbstractCompressionBase(new SevenZipReader()), ICompression
 	{
 	}
 }

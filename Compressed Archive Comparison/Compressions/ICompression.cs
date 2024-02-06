@@ -9,6 +9,11 @@
 		/// </summary>
 		/// <returns></returns>
 		public IEnumerable<string> GetFiles();
+
+		/// <summary>
+		/// Pass a custom FileName value to use instead of the default
+		/// </summary>
+		/// <returns></returns>
 		public IEnumerable<string> GetFiles(string filePath);
 
 		/// <summary>
@@ -16,5 +21,11 @@
 		/// </summary>
 		/// <returns></returns>
 		public string GetTypeName();
+
+		/// <summary>
+		/// Set the internal filename
+		/// </summary>
+		/// <param name="name"></param>
+		public void SetFileName(string name);
 	}
 }

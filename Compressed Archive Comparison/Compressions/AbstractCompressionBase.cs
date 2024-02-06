@@ -2,15 +2,17 @@
 
 namespace CompressedArchiveComparison.Compressions
 {
-    public abstract class AbstractCompressionBase(ICompressedReader reader, string fileName = "") : ICompression
-    {
-        public virtual string FileName { get; set; } = fileName;
-        public ICompressedReader Reader { get; set; } = reader;
+	public abstract class AbstractCompressionBase(ICompressedReader reader) : ICompression
+	{
+		public virtual string FileName { get; set; } = "";
+		public ICompressedReader Reader { get; set; } = reader;
 
-        public virtual IEnumerable<string> GetFiles() => !string.IsNullOrWhiteSpace(FileName) ? GetFiles(FileName) : [];
+		public virtual IEnumerable<string> GetFiles() => !string.IsNullOrWhiteSpace(FileName) ? GetFiles(FileName) : [];
 
-        public virtual IEnumerable<string> GetFiles(string filePath) => Reader.Read(filePath);
+		public virtual IEnumerable<string> GetFiles(string filePath) => Reader.Read(filePath);
 
-        public virtual string GetTypeName() => GetType().Name;
-    }
+		public virtual string GetTypeName() => GetType().Name;
+
+		public virtual void SetFileName(string name) => FileName = name;
+	}
 }

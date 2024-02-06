@@ -1,36 +1,34 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using CompressedArchiveComparison.Components;
-using CompressedArchiveComparison.Config;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using CompressedArchiveComparison;
+using CompressedArchiveComparison.Workflow;
 
-var workflow = new Workflow(new ConfigurationInfo());
-var configName = "Config.json";
+var builder = Host.CreateApplicationBuilder();
 
-try
+using var host = CompressionHostBuilder.CreateHostBuilder().Build();
+using var scope = host.Services.CreateScope();
+var services = scope.ServiceProvider;
+var comparisonService = services.GetRequiredService<IComparisonWorkflow>();
+
+await comparisonService.StartWorkflow(args);
+var displayTasks = new List<Task>();
+
+while (!comparisonService.IsFinished())
 {
-	Console.WriteLine("The default config fileis [Config.json]. A custom config file can be specified as an argument");
-	workflow.SetConfig(args, configName);
-	var loadConfig = Task.Run(workflow.LoadConfig);
-	await loadConfig;
+	if (displayTasks.Count == 0
+		&& comparisonService.CanDisplay(DisplayType.Source))
+	{
+		displayTasks.Add(comparisonService.DisplaySource());
+	}
+	if (displayTasks.Count == 1
+		&& comparisonService.CanDisplay(DisplayType.Missing))
+	{
+		displayTasks.Add(displayTasks.First().ContinueWith(first => comparisonService.DisplayMissing()));
+	}
+	await comparisonService.Next();
 }
-catch
-{
-	Environment.Exit(-1);
-}
-
-var loadSource = Task.Run(workflow.LoadCompressedSource);
-var loadDestination = Task.Run(workflow.LoadDestination);
-
-Task.WaitAll(loadSource, loadDestination);
-
-var displaySource = Task.Run(workflow.DisplaySource);
-var identifyMissing = Task.Run(workflow.IdentifyMissingFiles);
-
-Task.WaitAll(displaySource, identifyMissing);
-
-var exportMissing = Task.Run(workflow.ExportMissingFiles);
-var displayMissing = Task.Run(workflow.DisplayMissingFiles);
-
-Task.WaitAll(exportMissing, displayMissing);
+Task.WaitAll([.. displayTasks]);
 
 Console.WriteLine();
 Console.WriteLine("Code Complete!");

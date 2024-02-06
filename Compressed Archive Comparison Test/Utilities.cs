@@ -1,4 +1,8 @@
-﻿namespace CompressedArchiveComparisonTests
+﻿using CompressedArchiveComparison;
+using CompressedArchiveComparison.Components;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace CompressedArchiveComparisonTests
 {
 	public static class Utilities
 	{
@@ -40,6 +44,14 @@
 			}
 
 			Assert.AreEqual(expectedResultsFlattened, actualResultsFlattened);
+		}
+
+		public static CompressionResolver? GetCompressionResolver()
+		{
+			var host = CompressionHostBuilder.CreateHostBuilder().Build();
+
+			Assert.IsNotNull(host);
+			return host.Services.GetService<CompressionResolver>();
 		}
 	}
 }

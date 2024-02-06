@@ -1,10 +1,15 @@
 ﻿using CompressedArchiveComparison.Components;
+using CompressedArchiveComparison.Workflow;
 
 namespace CompressedArchiveComparisonTests
 {
-    [TestClass]
-	public class WorkflowTests
+	[TestClass]
+	public class WorkflowActionsTests
 	{
+		private readonly CompressionResolver _resolver;
+
+		public WorkflowActionsTests() => _resolver = Utilities.GetCompressionResolver() ?? throw new Exception("Failed to load Compression Resolver");
+
 		[TestMethod]
 		[DataRow("TestInfo.Json")]
 		[DataRow(null)]
@@ -13,7 +18,7 @@ namespace CompressedArchiveComparisonTests
 		{
 			var defaultValue = "TestInfo.Json";
 			var args = new string[] { testData };
-			var workflow = new Workflow(TestData.ValidFolderInfo);
+			var workflow = new WorkflowActions(_resolver, TestData.ValidFolderInfo);
 			workflow.SetConfig(args, defaultValue);
 
 			Assert.AreEqual(defaultValue, workflow.Config);
@@ -27,7 +32,7 @@ namespace CompressedArchiveComparisonTests
 		{
 			var defaultValue = "TestInfo.Json";
 			var args = new string[] { testData };
-			var workflow = new Workflow(TestData.ValidFolderInfo);
+			var workflow = new WorkflowActions(_resolver, TestData.ValidFolderInfo);
 			workflow.SetConfig(args, defaultValue);
 
 			Assert.AreEqual(testData, workflow.Config);
@@ -37,7 +42,7 @@ namespace CompressedArchiveComparisonTests
 		public async Task B_GetInfoFromJson_Correct_Value()
 		{
 			var defaultValue = "TestInfo.Json";
-			var result = await Workflow.GetInfoFromJson(defaultValue);
+			var result = await WorkflowActions.GetInfoFromJson(defaultValue);
 
 			Assert.IsNotNull(result);
 			Assert.AreEqual(TestData.ValidFolderInfo.CompressedSource, result.CompressedSource);
@@ -50,7 +55,7 @@ namespace CompressedArchiveComparisonTests
 		public async Task B_LoadConfig_Correct_Value()
 		{
 			var defaultValue = "TestInfo.Json";
-			var workflow = new Workflow(TestData.ValidFolderInfo);
+			var workflow = new WorkflowActions(_resolver, TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
 			await workflow.LoadConfig();
 			var result = workflow.ConfigInfo;
@@ -66,7 +71,7 @@ namespace CompressedArchiveComparisonTests
 		public async Task C_LoadCompressedSource_Correct_Value()
 		{
 			var defaultValue = "TestInfo.Json";
-			var workflow = new Workflow(TestData.ValidFolderInfo);
+			var workflow = new WorkflowActions(_resolver, TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
 			await workflow.LoadConfig();
 			await workflow.LoadCompressedSource();
@@ -83,10 +88,10 @@ namespace CompressedArchiveComparisonTests
 		public async Task C_GetFileList_Correct_Value()
 		{
 			var defaultValue = "TestInfo.Json";
-			var workflow = new Workflow(TestData.ValidFolderInfo);
+			var workflow = new WorkflowActions(_resolver, TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
 			await workflow.LoadConfig();
-			var sourceList = Workflow.GetFileList(workflow.ConfigInfo);
+			var sourceList = WorkflowActions.GetFileList(workflow.ConfigInfo);
 			var expectedResult = TestData.CompressedSourceUnFiltered_Result;
 
 			Utilities.AssertAreEqual(expectedResult, sourceList);
@@ -96,7 +101,7 @@ namespace CompressedArchiveComparisonTests
 		public async Task D_LoadDestination_Value()
 		{
 			var defaultValue = "TestInfo.Json";
-			var workflow = new Workflow(TestData.ValidFolderInfo);
+			var workflow = new WorkflowActions(_resolver, TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
 			await workflow.LoadConfig();
 			await workflow.LoadCompressedSource();
@@ -111,7 +116,7 @@ namespace CompressedArchiveComparisonTests
 		public async Task E_IdentifyMissingFiles_Correct_Value()
 		{
 			var defaultValue = "TestInfo.Json";
-			var workflow = new Workflow(TestData.ValidFolderInfo);
+			var workflow = new WorkflowActions(_resolver, TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
 			await workflow.LoadConfig();
 			var tasks = new Task[]
@@ -131,10 +136,10 @@ namespace CompressedArchiveComparisonTests
 		public async Task E_GetFileExclusions_Correct_Value()
 		{
 			var defaultValue = "TestInfo.Json";
-			var workflow = new Workflow(TestData.ValidFolderInfo);
+			var workflow = new WorkflowActions(_resolver, TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
 			await workflow.LoadConfig();
-			var exclusionList = await Workflow.GetFileExclusions(workflow.ConfigInfo);
+			var exclusionList = await WorkflowActions.GetFileExclusions(workflow.ConfigInfo);
 			var expectedResult = TestData.ExclusionFileList;
 
 			Utilities.AssertAreEqual(expectedResult, exclusionList);
@@ -144,12 +149,12 @@ namespace CompressedArchiveComparisonTests
 		public async Task E_FilterSourceList_Correct_Value()
 		{
 			var defaultValue = "TestInfo.Json";
-			var workflow = new Workflow(TestData.ValidFolderInfo);
+			var workflow = new WorkflowActions(_resolver, TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
 			await workflow.LoadConfig();
-			var exclusionList = await Workflow.GetFileExclusions(workflow.ConfigInfo);
-			var sourceList = Workflow.GetFileList(workflow.ConfigInfo);
-			var filteredSource= Workflow.FilterSourceList(sourceList, exclusionList);
+			var exclusionList = await WorkflowActions.GetFileExclusions(workflow.ConfigInfo);
+			var sourceList = WorkflowActions.GetFileList(workflow.ConfigInfo);
+			var filteredSource = WorkflowActions.FilterSourceList(sourceList, exclusionList);
 			var expectedResult = TestData.FilteredSourceList;
 
 			Utilities.AssertAreEqual(expectedResult, filteredSource);
@@ -159,7 +164,7 @@ namespace CompressedArchiveComparisonTests
 		public async Task F_ExportMissingFiles_Correct_Value()
 		{
 			var defaultValue = "TestInfo.Json";
-			var workflow = new Workflow(TestData.ValidFolderInfo);
+			var workflow = new WorkflowActions(_resolver, TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
 			await workflow.LoadConfig();
 			var tasks = new Task[]
@@ -183,7 +188,7 @@ namespace CompressedArchiveComparisonTests
 		public async Task F_ExportToFile_Data_Correct_Value()
 		{
 			var defaultValue = "TestInfo.Json";
-			var workflow = new Workflow(TestData.ValidFolderInfo);
+			var workflow = new WorkflowActions(_resolver, TestData.ValidFolderInfo);
 			workflow.SetConfig([], defaultValue);
 			await workflow.LoadConfig();
 			var tasks = new Task[]
@@ -193,7 +198,7 @@ namespace CompressedArchiveComparisonTests
 			};
 			Task.WaitAll(tasks);
 			workflow.IdentifyMissingFiles();
-			await Workflow.ExportToFile(workflow.MissingFiles, workflow.ConfigInfo);
+			await WorkflowActions.ExportToFile(workflow.MissingFiles, workflow.ConfigInfo);
 			var writtenResult = await File.ReadAllTextAsync(TestData.NormalizedEmptyFileName);
 			var expectedResult = "The Following files were missing from the destination:"
 								 + Environment.NewLine
