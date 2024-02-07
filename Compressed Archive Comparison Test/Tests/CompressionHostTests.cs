@@ -1,5 +1,4 @@
-﻿using CompressedArchiveComparison;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using CompressedArchiveComparison.Config;
 using CompressedArchiveComparison.CompressedReadonlyReaders;
 using CompressedArchiveComparison.Components;
@@ -8,7 +7,7 @@ using CompressedArchiveComparison.Workflow;
 
 namespace CompressedArchiveComparisonTests
 {
-	[TestClass]
+    [TestClass]
 	public class CompressionHostTests
 	{
 		[TestMethod]

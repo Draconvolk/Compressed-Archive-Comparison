@@ -1,4 +1,5 @@
-﻿using SharpCompress.Archives;
+﻿using CompressedArchiveComparison.Exceptions;
+using SharpCompress.Archives;
 
 namespace CompressedArchiveComparison.CompressedReadonlyReaders
 {
@@ -16,9 +17,9 @@ namespace CompressedArchiveComparison.CompressedReadonlyReaders
 				}
 				return records;
 			}
-			catch
+			catch (Exception ex)
 			{
-				Console.WriteLine($"*** Something went wrong while reading the content of the compressed file [{filePath}]");
+				ExceptionList.Add(ex, $"Something went wrong while reading the content of the compressed file {filePath}", $"SevenZipReader\\Read", [filePath]);
 				return [];
 			}
 		}

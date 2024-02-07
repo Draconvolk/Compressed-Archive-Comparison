@@ -1,4 +1,5 @@
 ﻿using CompressedArchiveComparison.Config;
+using CompressedArchiveComparison.Exceptions;
 using System.Collections.Concurrent;
 using System.Text.Json;
 
@@ -6,11 +7,14 @@ namespace CompressedArchiveComparison.Components
 {
 	public static class DataProcessing
 	{
+		private static readonly string DP = "DataProcessing";
+
 		/// <summary>
 		/// Valid File Extensions for Output File to be written to
 		/// </summary>
 		public static readonly List<string> ValidFileExtensions = [".log", ".txt"];
 		public static readonly string DefaultSeparator = Environment.NewLine;
+		public static readonly string fileSeparator = "|";
 
 		/// <summary>
 		/// Returns a collection of <paramref name="sourceList"/> values that don't exist in the <paramref name="exclusionList"/>,
@@ -22,12 +26,18 @@ namespace CompressedArchiveComparison.Components
 		public static IEnumerable<string> FilterSourceList(IEnumerable<string> sourceList, IEnumerable<string> exclusionList)
 		{
 			var filteredList = new List<string>();
-			if (sourceList == null || !sourceList.Any() || exclusionList == null || !exclusionList.Any())
+			try
 			{
-				return filteredList;
+				if (sourceList == null || !sourceList.Any() || exclusionList == null || !exclusionList.Any())
+				{
+					return filteredList;
+				}
+				filteredList = [.. sourceList.Where(x => !exclusionList.Contains(GetFileName(x))).OrderBy(x => x)];
 			}
-			filteredList = [.. sourceList.Where(x => !exclusionList.Contains(GetFileName(x))).OrderBy(x => x)];
-
+			catch (Exception ex)
+			{
+				ExceptionList.Add(ex, "Something went wrong trying to filter the source list", $"{DP}\\FilterSourceList");
+			}
 			return filteredList;
 		}
 
@@ -38,19 +48,20 @@ namespace CompressedArchiveComparison.Components
 		/// <returns></returns>
 		public static IInfo GetAsInfo(string jsonData)
 		{
-			if (!string.IsNullOrWhiteSpace(jsonData))
+			if (string.IsNullOrWhiteSpace(jsonData))
 			{
-				try
-				{
-					return JsonSerializer.Deserialize<ConfigurationInfo>(jsonData) ?? new ConfigurationInfo();
-				}
-				catch
-				{
-					Console.WriteLine($"*** Something went wrong trying to deserialize the jsonData.");
-					return new ConfigurationInfo();
-				}
+				ExceptionList.Add(new Exception("Blank Data"), "JSON data is empty", $"{DP}\\GetAsInfo", [jsonData]);
+				return new ConfigurationInfo();
 			}
-			return new ConfigurationInfo();
+			try
+			{
+				return JsonSerializer.Deserialize<ConfigurationInfo>(jsonData) ?? new ConfigurationInfo();
+			}
+			catch (Exception ex)
+			{
+				ExceptionList.Add(ex, "Error deserializing JSON data", $"{DP}\\GetAsInfo", [jsonData]);
+				return new ConfigurationInfo();
+			}
 		}
 
 		/// <summary>
@@ -63,6 +74,7 @@ namespace CompressedArchiveComparison.Components
 			var files = new List<string>();
 			if (string.IsNullOrWhiteSpace(filePath))
 			{
+				ExceptionList.Add(new Exception("Filename is empty"), "The Filename is empty", $"{DP}\\GetAsInfo", [filePath]);
 				return files;
 			}
 			try
@@ -72,9 +84,9 @@ namespace CompressedArchiveComparison.Components
 				Parallel.ForEach(compression.GetFiles(), files.Add);
 				return files.OrderBy(x => x);
 			}
-			catch
+			catch (Exception ex)
 			{
-				Console.WriteLine($"*** Something went wrong trying to read from the compressed file {filePath}");
+				ExceptionList.Add(ex, "Error reading compressed file content", $"{DP}\\GetCompressedFileContent", [filePath]);
 				return files;
 			}
 		}
@@ -93,9 +105,9 @@ namespace CompressedArchiveComparison.Components
 				dirData.AddRange(GetCompressedOfType(info, "*.zip"));
 				dirData.AddRange(GetCompressedOfType(info, "*.7z"));
 			}
-			catch
+			catch (Exception ex)
 			{
-				Console.WriteLine($"*** Something went wrong trying to read from the compressed file directory {info.CompressedSource}");
+				ExceptionList.Add(ex, "Something went wrong getting list of compressed files from the source directory", $"{DP}\\GetCompressedFileList", [info.CompressedSource]);
 			}
 			return dirData.OrderBy(x => x);
 		}
@@ -113,9 +125,9 @@ namespace CompressedArchiveComparison.Components
 			{
 				files = Directory.EnumerateFiles(info.CompressedSource, type).ToList();
 			}
-			catch
+			catch (Exception ex)
 			{
-				Console.WriteLine($"*** Something went wrong trying to read from the compressed file directory {info.CompressedSource}");
+				ExceptionList.Add(ex, "Something went wrong getting list of files from the source directory", $"{DP}\\GetCompressedOfType", [info.CompressedSource, type]);
 			}
 			return files;
 		}
@@ -136,9 +148,9 @@ namespace CompressedArchiveComparison.Components
 					dir.Add(file);
 				}
 			}
-			catch
+			catch (Exception ex)
 			{
-				Console.WriteLine($"*** Something went wrong trying to read from the file directory {info.DeployDestination}");
+				ExceptionList.Add(ex, "Something went wrong getting list of files from the destination directory", $"{DP}\\GetDirectoryFileList", [info.DeployDestination]);
 			}
 			return dir;
 		}
@@ -156,9 +168,9 @@ namespace CompressedArchiveComparison.Components
 				var excludeText = await ReadFileData(file.FullName);
 				return excludeText;
 			}
-			catch
+			catch (Exception ex)
 			{
-				Console.WriteLine($"*** Something went wrong trying to read the exclusion file [{info.ExclusionsFileName}]");
+				ExceptionList.Add(ex, "Something went wrong trying to read the exclusion file", $"{DP}\\GetExclusionFileText", [info.ExclusionsFileName]);
 				return "";
 			}
 		}
@@ -173,37 +185,53 @@ namespace CompressedArchiveComparison.Components
 		{
 			var missingFileBag = new ConcurrentBag<string>();
 			var missingTasks = new List<Task>();
-			Parallel.ForEach(sourceList, file =>
-				missingTasks.Add(Task.Run(async () =>
-				{
-					var files = await DetermineMissingFiles(resolver, file, destinationList);
-					foreach (var item in files)
+			try
+			{
+				Parallel.ForEach(sourceList, file =>
+					missingTasks.Add(Task.Run(async () =>
 					{
-						missingFileBag.Add(item);
-					}
-				}))
-			);
-			Task.WaitAll([.. missingTasks]);
+						var files = await DetermineMissingFiles(resolver, file, destinationList);
+						foreach (var item in files)
+						{
+							missingFileBag.Add(item);
+						}
+					}))
+				);
+				Task.WaitAll([.. missingTasks]);
+			}
+			catch (Exception ex)
+			{
+				ExceptionList.Add(ex, "Something went wrong trying to create the list of missing files", $"{DP}\\GetMissingSourceFiles");
+				return [];
+			}
 
 			var executeMissingTasks = new List<Task>();
 			var missingList = new ConcurrentBag<string>();
 			var addMissing = new object();
-			while (!missingFileBag.IsEmpty)
+			try
 			{
-				executeMissingTasks.Add(Task.Run(() =>
+				while (!missingFileBag.IsEmpty)
 				{
-					if (missingFileBag.TryTake(out var missingFile))
+					executeMissingTasks.Add(Task.Run(() =>
 					{
-						lock (addMissing)
+						if (missingFileBag.TryTake(out var missingFile))
 						{
-							missingList.Add(missingFile);
+							lock (addMissing)
+							{
+								missingList.Add(missingFile);
+							}
 						}
-					}
-				}));
-			}
-			Task.WaitAll([.. executeMissingTasks]);
+					}));
+				}
+				Task.WaitAll([.. executeMissingTasks]);
 
-			return missingList.OrderBy(x => x);
+				return missingList.OrderBy(x => x);
+			}
+			catch (Exception ex)
+			{
+				ExceptionList.Add(ex, "Something went wrong trying to create the list of missing files", $"{DP}\\GetMissingSourceFiles");
+				return [];
+			}
 		}
 
 		/// <summary>		
@@ -215,23 +243,31 @@ namespace CompressedArchiveComparison.Components
 		/// <returns></returns>
 		public static async Task<IEnumerable<string>> DetermineMissingFiles(CompressionResolver resolver, string file, IEnumerable<string> destinationList)
 		{
-			IEnumerable<string> justCompressedFiles = [];
-			var getCompressedTask = Task.Factory.StartNew(() =>
+			try
 			{
-				var compressedFileContent = GetCompressedFileContent(resolver, file);
-				justCompressedFiles = OnlyFiles(compressedFileContent);
-			});
-			IEnumerable<string> targetDestList = [];
-			var getDestTask = Task.Run(async () =>
+				IEnumerable<string> justCompressedFiles = [];
+				var getCompressedTask = Task.Factory.StartNew(() =>
+				{
+					var compressedFileContent = GetCompressedFileContent(resolver, file);
+					justCompressedFiles = OnlyFiles(compressedFileContent);
+				});
+				IEnumerable<string> targetDestList = [];
+				var getDestTask = Task.Run(async () =>
+				{
+					var fileName = GetFileName(file);
+					var targetFolder = GetFolderName(fileName);
+					targetDestList = await FilterDestination(destinationList, targetFolder);
+				});
+				await Task.WhenAll([getCompressedTask, getDestTask]);
+				var missingFiles = FilterMissingFiles(targetDestList, justCompressedFiles);
+				var fullFilePath = AddPathToValue(missingFiles, file, fileSeparator);
+				return fullFilePath;
+			}
+			catch (Exception ex)
 			{
-				var fileName = GetFileName(file);
-				var targetFolder = GetFolderName(fileName);
-				targetDestList = await FilterDestination(destinationList, targetFolder);
-			});
-			await Task.WhenAll([getCompressedTask, getDestTask]);
-			var missingFiles = await FilterMissingFiles(targetDestList, justCompressedFiles);
-			var fullFilePath = AddPathToValue(missingFiles, file, "|");
-			return fullFilePath;
+				ExceptionList.Add(ex, "Something went wrong trying to determine the missing files", $"{DP}\\DetermineMissingFiles", [file]);
+				return [];
+			}
 		}
 
 		/// <summary>
@@ -241,6 +277,11 @@ namespace CompressedArchiveComparison.Components
 		/// <returns></returns>
 		public static IEnumerable<string> OnlyFiles(IEnumerable<string> compressedFileContent)
 		{
+			if (compressedFileContent == null)
+			{
+				ExceptionList.Add(new Exception("Filename collection is null"), "The filename collection is null", $"{DP}\\OnlyFiles");
+				yield break;
+			}
 			var fileContents = compressedFileContent.ToArray();
 			if (fileContents.Length <= 1)
 			{
@@ -280,26 +321,44 @@ namespace CompressedArchiveComparison.Components
 		/// <param name="file"></param>
 		/// <returns></returns>
 		public static string GetFileName(string file)
-			=> file[(file.LastIndexOf('\\') + 1)..];
+		{
+			try
+			{
+				return file[(file.LastIndexOf('\\') + 1)..];
+			}
+			catch (Exception ex)
+			{
+				ExceptionList.Add(ex, "Something went wrong getting just the filename", $"{DP}\\GetFileName", [file]);
+				return "";
+			}
+		}
 
 		/// <summary>
-		/// Returns the file name stripped of its extension
+		/// Returns the <paramref name="fileName"/> stripped of its extension for use as a foldername
 		/// </summary>
 		/// <param name="fileName"></param>
 		/// <returns></returns>
 		public static string GetFolderName(string fileName)
 		{
-			if (string.IsNullOrWhiteSpace(fileName))
+			try
 			{
+				if (string.IsNullOrWhiteSpace(fileName))
+				{
+					return "";
+				}
+				if (fileName.LastIndexOf('.') == -1)
+				{
+					return fileName;
+				}
+				else
+				{
+					return fileName[..fileName.LastIndexOf('.')];
+				}
+			}
+			catch (Exception ex)
+			{
+				ExceptionList.Add(ex, "Something went wrong getting the foldername", $"{DP}\\GetFolderName", [fileName]);
 				return "";
-			}
-			if (fileName.LastIndexOf('.') == -1)
-			{
-				return fileName;
-			}
-			else
-			{
-				return fileName[..fileName.LastIndexOf('.')];
 			}
 		}
 
@@ -313,15 +372,23 @@ namespace CompressedArchiveComparison.Components
 		{
 			return await Task.Factory.StartNew(() =>
 			{
-				var filtered = new List<string>();
-				foreach (var file in destinationList)
+				try
 				{
-					if (file.Contains(targetFolder))
+					var filtered = new List<string>();
+					foreach (var file in destinationList)
 					{
-						filtered.Add(file);
+						if (file.Contains(targetFolder))
+						{
+							filtered.Add(file);
+						}
 					}
+					return filtered;
 				}
-				return filtered;
+				catch (Exception ex)
+				{
+					ExceptionList.Add(ex, "Something went wrong filtering the destination list", $"{DP}\\FilterDestination", [targetFolder]);
+					return [];
+				}
 			});
 		}
 
@@ -331,11 +398,11 @@ namespace CompressedArchiveComparison.Components
 		/// <param name="targetDestList"></param>
 		/// <param name="justCompressedFiles"></param>
 		/// <returns></returns>
-		public static async Task<IEnumerable<string>> FilterMissingFiles(IEnumerable<string> targetDestList, IEnumerable<string> justCompressedFiles)
+		public static IEnumerable<string> FilterMissingFiles(IEnumerable<string> targetDestList, IEnumerable<string> justCompressedFiles)
 		{
-			return await Task.Run(() =>
+			var missingFiles = new List<string>();
+			try
 			{
-				var missingFiles = new List<string>();
 				foreach (var file in justCompressedFiles)
 				{
 					if (!targetDestList.Any(y => y.Contains(file)))
@@ -344,7 +411,12 @@ namespace CompressedArchiveComparison.Components
 					}
 				}
 				return missingFiles;
-			});
+			}
+			catch (Exception ex)
+			{
+				ExceptionList.Add(ex, "Something went wrong filtering the missing files list", $"{DP}\\FilterMissingFiles");
+				return [];
+			}
 		}
 
 		/// <summary>
@@ -355,7 +427,17 @@ namespace CompressedArchiveComparison.Components
 		/// <param name="separator"></param>
 		/// <returns></returns>
 		public static IEnumerable<string> AddPathToValue(IEnumerable<string> list, string addPath, string separator)
-			=> list.Select(y => $"{addPath}{separator}{y}");
+		{
+			try
+			{
+				return list.Select(y => $"{addPath}{separator}{y}");
+			}
+			catch (Exception ex)
+			{
+				ExceptionList.Add(ex, "Something went wrong adding the specified filePath to the list", $"{DP}\\AddPathToValue", [addPath, separator]);
+				return [];
+			}
+		}
 
 		/// <summary>
 		/// Validate <see cref="IInfo.CompressedSource"/> and <see cref="IInfo.DeployDestination"/> values are not empty
@@ -363,7 +445,11 @@ namespace CompressedArchiveComparison.Components
 		/// <param name="info"></param>
 		/// <returns></returns>
 		public static bool IsValidInfo(IInfo info)
-			=> !(info == null || string.IsNullOrWhiteSpace(info.CompressedSource) || string.IsNullOrWhiteSpace(info.DeployDestination));
+			=> !(info == null
+			|| string.IsNullOrWhiteSpace(info.CompressedSource)
+			|| string.IsNullOrWhiteSpace(info.DeployDestination)
+			|| string.IsNullOrWhiteSpace(info.ExclusionsFileName)
+			|| string.IsNullOrWhiteSpace(info.ExportFileName));
 
 		/// <summary>
 		/// Returns a collection of parsed values from <paramref name="exclusionText"/> separated by <paramref name="separator"/>
@@ -381,9 +467,9 @@ namespace CompressedArchiveComparison.Components
 					list.AddRange(exclusionText.Split(separator));
 				}
 			}
-			catch
+			catch (Exception ex)
 			{
-				Console.WriteLine("*** Something went wrong parsing the exclusion file text");
+				ExceptionList.Add(ex, "Something went wrong parsing the exclusion file text", $"{DP}\\ParseExclusionFileText", [exclusionText, separator]);
 			}
 			return list;
 		}
@@ -395,40 +481,40 @@ namespace CompressedArchiveComparison.Components
 		/// <returns></returns>
 		public static async Task<string> ReadPathInfo(string jsonPath)
 		{
-			if (!string.IsNullOrWhiteSpace(jsonPath))
+			if (string.IsNullOrWhiteSpace(jsonPath))
 			{
-				try
-				{
-					var path = Path.Combine(Environment.CurrentDirectory, jsonPath);
-					var readData = await ReadFileData(path);
-					Console.WriteLine(readData);
-					return readData;
-				}
-				catch
-				{
-					Console.WriteLine($"*** Something went wrong trying to read the json configuration file.");
-					return "";
-				}
+				return "";
 			}
-			return "";
+			try
+			{
+				var path = Path.Combine(Environment.CurrentDirectory, jsonPath);
+				var readData = await ReadFileData(path);
+				Console.WriteLine(readData);
+				return readData;
+			}
+			catch (Exception ex)
+			{
+				ExceptionList.Add(ex, $"Error trying to read theJSON data from {jsonPath}", $"{DP}\\ReadPathInfo", [jsonPath]);
+				return "";
+			}
 		}
 
 		/// <summary>
-		/// Reads the text of the file <paramref name="path"/> as a single string
+		/// Reads the text of the file <paramref name="filePath"/> as a single string
 		/// </summary>
-		/// <param name="path"></param>
+		/// <param name="filePath"></param>
 		/// <returns></returns>
-		public static async Task<string> ReadFileData(string path)
+		public static async Task<string> ReadFileData(string filePath)
 		{
 			try
 			{
-				var jsonStream = new StreamReader(path);
+				var jsonStream = new StreamReader(filePath);
 				var readData = await jsonStream.ReadToEndAsync();
 				return readData;
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"*** Error Reading from file [{path}] - {ex.Message}");
+				ExceptionList.Add(ex, $"Error trying to read from the file {filePath}", $"{DP}\\ReadFileData", [filePath]);
 				return "";
 			}
 		}
@@ -447,7 +533,7 @@ namespace CompressedArchiveComparison.Components
 			{
 				if (string.IsNullOrWhiteSpace(filePath))
 				{
-					Console.WriteLine("Invalid filepath for output file, []");
+					ExceptionList.Add(new Exception("Invalid filepath"), $"Invalid filepath for output file", $"{DP}\\WriteToFile", [filePath]);
 					return false;
 				}
 				if (!asyncList.Any())
@@ -463,9 +549,9 @@ namespace CompressedArchiveComparison.Components
 				Console.WriteLine($"Successfuly wrote missing files to output file [{filePath}]");
 				return true;
 			}
-			catch
+			catch (Exception ex)
 			{
-				Console.WriteLine($"*** Something went wrong while trying to write the missing files to the log file [{filePath}]");
+				ExceptionList.Add(ex, $"Error trying to write the missing files to {filePath}", $"{DP}\\WriteToFile", [filePath]);
 				return false;
 			}
 		}
@@ -478,26 +564,36 @@ namespace CompressedArchiveComparison.Components
 		/// <returns></returns>
 		public static string NormalizeFileName(string filePath)
 		{
-			if (string.IsNullOrWhiteSpace(filePath))
+			try
 			{
-				filePath = "MissingFilesFound.txt";
-			}
-			if (filePath.Length > 0 && !filePath.Contains('.'))
-			{
-				filePath = filePath.TrimEnd() + ".txt";
-			}
-			var tmpFile = new FileInfo(filePath);
-			if (!ValidFileExtensions.Contains(tmpFile.Extension.ToLower()))
-			{
-				Console.Write($"*** Invalid FileName Extension for output file [{tmpFile.Extension}]. Please use one of the following: ");
-				foreach (var ext in ValidFileExtensions)
+				if (string.IsNullOrWhiteSpace(filePath))
 				{
-					Console.Write(ext + " ");
+					filePath = "MissingFilesFound.txt";
 				}
-				Console.WriteLine();
+				if (filePath.Length > 0 && !filePath.Contains('.'))
+				{
+					filePath = filePath.TrimEnd() + ".txt";
+				}
+				var tmpFile = new FileInfo(filePath);
+				if (!ValidFileExtensions.Contains(tmpFile.Extension.ToLower()))
+				{
+					var validExt = "";
+
+					foreach (var ext in ValidFileExtensions)
+					{
+						validExt += ext + " ";
+					}
+
+					ExceptionList.Add(new Exception("Invalid extension"), $"Invalid filename extension for the file {filePath}. Valid extensions are: {validExt}", $"{DP}\\NormalizeFileName", [filePath]);
+					return "";
+				}
+				return Path.GetFullPath(filePath);
+			}
+			catch (Exception ex)
+			{
+				ExceptionList.Add(ex, $"Something went wrong trying to normalize the filename {filePath}", $"{DP}\\NormalizeFileName", [filePath]);
 				return "";
 			}
-			return Path.GetFullPath(filePath);
 		}
 	}
 }

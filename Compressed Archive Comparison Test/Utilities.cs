@@ -1,10 +1,9 @@
-﻿using CompressedArchiveComparison;
-using CompressedArchiveComparison.Components;
+﻿using CompressedArchiveComparison.Components;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CompressedArchiveComparisonTests
 {
-	public static class Utilities
+    public static class Utilities
 	{
 		/// <summary>
 		/// Extension Method to flatten an IEnumerable<string> to a string for comparison

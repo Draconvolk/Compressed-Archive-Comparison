@@ -149,9 +149,9 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public async Task G_FilterMissingFiles_Correct_Value()
+		public void G_FilterMissingFiles_Correct_Value()
 		{
-			var result = await DataProcessing.FilterMissingFiles(TestData.DestinationFilteredList, TestData.SourceCompressedOnlyFilesList_Result);
+			var result = DataProcessing.FilterMissingFiles(TestData.DestinationFilteredList, TestData.SourceCompressedOnlyFilesList_Result);
 			var expectedResult = TestData.DestinationFilteredMissingList;
 
 			Assert.IsNotNull(result);
