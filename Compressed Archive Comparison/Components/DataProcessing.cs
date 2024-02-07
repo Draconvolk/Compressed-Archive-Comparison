@@ -241,13 +241,37 @@ namespace CompressedArchiveComparison.Components
 		/// <returns></returns>
 		public static IEnumerable<string> OnlyFiles(IEnumerable<string> compressedFileContent)
 		{
-			foreach (var file in compressedFileContent)
+			var fileContents = compressedFileContent.ToArray();
+			if (fileContents.Length <= 1)
 			{
-				if (file.Contains('.'))
+				if (fileContents.Length == 0)
 				{
-					yield return file;
+					yield break;
 				}
-			};
+				if (fileContents.Length == 1)
+				{
+					if (fileContents[0].Contains('.'))
+					{
+						yield return fileContents[0];
+					}
+				}
+			}
+			for (var index = 0; index < fileContents.Length - 1; index++)
+			{
+				if (fileContents[index + 1].Contains(fileContents[index]))
+				{
+					continue;
+				}
+				if (fileContents[index].Contains('.'))
+				{
+					yield return fileContents[index];
+				}
+			}
+			var last = fileContents.Last();
+			if (last.Contains('.'))
+			{
+				yield return last;
+			}
 		}
 
 		/// <summary>

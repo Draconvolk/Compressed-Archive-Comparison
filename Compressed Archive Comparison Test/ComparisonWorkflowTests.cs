@@ -64,7 +64,7 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		public async Task D_Next_IdentiftMissing_Correct_Value()
+		public async Task D_Next_IdentifyMissing_Correct_Value()
 		{
 			var workflowActions = new WorkflowActions(_resolver, TestData.TestDirInfo);
 			workflowActions.SetConfig(["TestInfo.json"], "TestInfo.json");
@@ -79,7 +79,7 @@ namespace CompressedArchiveComparisonTests
 			Assert.IsTrue(resultState);
 			Assert.IsTrue(testWorkflow.CanDisplay(DisplayType.Source));
 			Assert.IsTrue(testWorkflow.CanDisplay(DisplayType.Missing));
-			Assert.IsTrue(testWorkflow.IsFinished());
+			Assert.IsFalse(testWorkflow.IsFinished());
 		}
 
 		[TestMethod]
@@ -99,7 +99,7 @@ namespace CompressedArchiveComparisonTests
 			Assert.IsTrue(resultState);
 			Assert.IsTrue(testWorkflow.CanDisplay(DisplayType.Source));
 			Assert.IsTrue(testWorkflow.CanDisplay(DisplayType.Missing));
-			Assert.IsTrue(testWorkflow.IsFinished());
+			Assert.IsFalse(testWorkflow.IsFinished());
 		}
 
 		[TestMethod]

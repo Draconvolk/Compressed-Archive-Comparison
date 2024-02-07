@@ -139,6 +139,16 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
+		public void F_OnlyFiles_Robust_Correct_Value()
+		{
+			var result = DataProcessing.OnlyFiles(TestData.SourceCompressedRobustFullList);
+			var expectedResult = TestData.SourceCompressedOnlyFilesRobustList_Result;
+
+			Assert.IsNotNull(result);
+			Utilities.AssertAreEqual(expectedResult, result);
+		}
+
+		[TestMethod]
 		public async Task G_FilterMissingFiles_Correct_Value()
 		{
 			var result = await DataProcessing.FilterMissingFiles(TestData.DestinationFilteredList, TestData.SourceCompressedOnlyFilesList_Result);
