@@ -140,6 +140,38 @@ namespace CompressedArchiveComparisonTests
 			"TestDir1\\TestFile2.txt",
 			"TestDir1\\TestFile7.txt"
 		];
+		public static readonly List<string> SourceCompressedRobustFullList = [
+			"Test.Dir1","Test.Dir1\\Nested_Dir1",
+			"Test.Dir1\\Nested_Dir1\\Test_File3.toml",
+			"Test.Dir1\\Nested_Dir1\\Test - File4.nif",
+			"Test.Dir1\\Nested_Dir1\\Test.File.7.nif",
+			"Test.Dir1\\Nested_Dir1\\TestFile8.nif",
+			"Test.Dir1\\Nested . Dir2",
+			"Test.Dir1\\Nested . Dir2\\Test--File6.esp",
+			"Test.Dir1\\Nested . Dir2\\Test _ File  - 6.bsa",
+			"Test.Dir1\\Nested- Dir.3",
+			"Test.Dir1\\Nested- Dir.3\\TestFile1.exe",
+			"Test.Dir1\\Nested- Dir.3\\TestFile2.dll",
+			"Test.Dir1\\Only Folder .Test - Exception",
+			"Test.Dir1\\Only Folder .Test - Exception\\Deepest-Folder",
+			"Test.Dir1\\Test_File1.txt",
+			"Test.Dir1\\Test File2.bat",
+			"Test.Dir1\\Test.File7.esp"
+		];
+		public static readonly List<string> SourceCompressedOnlyFilesRobustList_Result = [			
+			"Test.Dir1\\Nested_Dir1\\Test_File3.toml",
+			"Test.Dir1\\Nested_Dir1\\Test - File4.nif",
+			"Test.Dir1\\Nested_Dir1\\Test.File.7.nif",
+			"Test.Dir1\\Nested_Dir1\\TestFile8.nif",
+			"Test.Dir1\\Nested . Dir2\\Test--File6.esp",
+			"Test.Dir1\\Nested . Dir2\\Test _ File  - 6.bsa",
+			"Test.Dir1\\Nested- Dir.3\\TestFile1.exe",
+			"Test.Dir1\\Nested- Dir.3\\TestFile2.dll",
+			"Test.Dir1\\Only Folder .Test - Exception\\Deepest-Folder",
+			"Test.Dir1\\Test_File1.txt",
+			"Test.Dir1\\Test File2.bat",
+			"Test.Dir1\\Test.File7.esp"
+		];
 		public static readonly List<string> DestinationFullList = [
 			$"{ValidDestinationDir}\\TestDir1\\NestedDir1\\TestFile3.txt",
 			$"{ValidDestinationDir}\\TestDir1\\NestedDir1\\TestFile4.txt",
@@ -195,7 +227,7 @@ namespace CompressedArchiveComparisonTests
 			"SourceDir\\TestDir2.7z|NestedDir1\\TestFile5.txt",
 			"SourceDir\\TestDir2.7z|NestedDir1\\TestFile8.txt",
 			"SourceDir\\TestDir2.7z|NestedDir2\\TestFile6.txt",
-			"SourceDir\\TestDir2.7z|NestedDir2\\TestFile9.txt",
+			"SourceDir\\TestDir2.7z|NestedDir2\\TestFile9.txt",			
 			"SourceDir\\TestDir2.7z|TestFile7.txt",
 			"SourceDir\\TestRar.rar|TestFile1.txt",
 			"SourceDir\\TestRar.rar|TestFile2.txt"
