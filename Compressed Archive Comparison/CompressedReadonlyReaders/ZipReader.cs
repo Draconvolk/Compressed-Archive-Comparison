@@ -1,8 +1,9 @@
-﻿using System.IO.Compression;
+﻿using CompressedArchiveComparison.Exceptions;
+using System.IO.Compression;
 
 namespace CompressedArchiveComparison.CompressedReadonlyReaders
 {
-    public class ZipReader : ICompressedReader
+    public class ZipReader(IExceptionList exceptionList) : ICompressedReader
     {
         public IEnumerable<string> Read(string filePath)
         {
@@ -16,9 +17,9 @@ namespace CompressedArchiveComparison.CompressedReadonlyReaders
                 }
                 return records;
             }
-            catch
+            catch (Exception ex)
             {
-                Console.WriteLine($"*** Something went wrong while reading the content of the compressed file [{filePath}]");
+                exceptionList.Add(ex, $"Something went wrong while reading the content of the compressed file {filePath}", $"ZipReader\\Read", [filePath]);
                 return [];
             }
         }

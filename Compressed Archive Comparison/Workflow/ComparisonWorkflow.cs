@@ -1,7 +1,10 @@
-﻿namespace CompressedArchiveComparison.Workflow
+﻿using CompressedArchiveComparison.Exceptions;
+
+namespace CompressedArchiveComparison.Workflow
 {
-	public class ComparisonWorkflow(IWorkflowActions workflow) : IComparisonWorkflow
+	public class ComparisonWorkflow(IExceptionList exceptionList, IWorkflowActions workflow) : IComparisonWorkflow
 	{
+		private static readonly string CW = "ComparisonWorkflow";
 		private readonly object _canDisplayLock = new();
 		private readonly Dictionary<DisplayType, bool> _canStartDisplay = new()
 		{
@@ -21,9 +24,9 @@
 				await loadConfig;
 				UpdateState();
 			}
-			catch
+			catch (Exception ex)
 			{
-				Environment.Exit(-1);
+				exceptionList.Add(ex, "Error trying to load the Config", $"{CW}\\StartWorkflow", [.. args]);
 			}
 		}
 
@@ -53,7 +56,8 @@
 				case StateFlow.Finished:
 					break;
 				default:
-					Console.WriteLine($"Invalid call to Next based on Current State of [{Enum.GetName(typeof(StateFlow), CurrentState)}]");
+					var currentState = Enum.GetName(typeof(StateFlow), CurrentState);
+					exceptionList.Add(new Exception("Invalid Call"), $"Invalid call to Next based on Current State of {currentState}", $"{CW}\\Next");
 					break;
 			}
 		}
@@ -66,7 +70,7 @@
 				{
 					DisplayType.Source => CurrentState >= StateFlow.LoadInitialData,
 					DisplayType.Missing => CurrentState >= StateFlow.IdentifyMissing,
-					_ => false //should never be hit
+					_ => false //change if additional types added
 				};
 			}
 		}
@@ -77,9 +81,16 @@
 
 		public async Task LoadInitialData()
 		{
-			var loadSource = Task.Run(workflow.LoadCompressedSource);
-			workflow.LoadDestination();
-			await loadSource;
+			try
+			{
+				var loadSource = Task.Run(workflow.LoadCompressedSource);
+				workflow.LoadDestination();
+				await loadSource;
+			}
+			catch(Exception ex)
+			{
+				exceptionList.Add(ex, $"Something went wrong while loading the initial data", $"{CW}\\LoadInitialData");
+			}
 		}
 
 		public async Task DisplaySource()

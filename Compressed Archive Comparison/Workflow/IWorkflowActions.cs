@@ -50,7 +50,7 @@ namespace CompressedArchiveComparison.Workflow
 
         /// <summary>
         /// Set the Workflow IInfo Config property, accepts optional command line <paramref name="args"/> to
-        /// specify a custom json config file name to load, otherwise it uses the <paramref name="defaultConfig"/>
+        /// specify a custom json config filename to load, otherwise it uses the <paramref name="defaultConfig"/>
         /// </summary>
         /// <param name="args"></param>
         /// <param name="defaultConfig"></param>

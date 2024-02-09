@@ -3,14 +3,16 @@ using CompressedArchiveComparison.Config;
 
 namespace CompressedArchiveComparisonTests
 {
-	[TestClass]
+    [TestClass]
 	public class InitializationTests
 	{
+        private static DataProcessing DProcessing => Utilities.GetInjectedObject<DataProcessing>() ?? throw new Exception("Failed to load DataProcessing");
+        
 		[TestMethod]
 		[DataRow("TestInfo.json")]
 		public async Task A_ReadPathInfo_Correct_Value_Param(string testData)
 		{
-			var result = await DataProcessing.ReadPathInfo(testData);
+			var result = await DProcessing.ReadPathInfo(testData);
 			var expectedResult = TestData.TestInfoJson;
 
 			Assert.IsNotNull(result);
@@ -23,7 +25,7 @@ namespace CompressedArchiveComparisonTests
 		[DataRow("fileNotFound.json")]
 		public async Task A_ReadPathInfo_Bad_Data_Handled(string testData)
 		{
-			var result = await DataProcessing.ReadPathInfo(testData);
+			var result = await DProcessing.ReadPathInfo(testData);
 
 			Assert.IsNotNull(result);
 			Assert.AreEqual("", result);
@@ -32,7 +34,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public void B_GetAsInfo_Not_Null()
 		{
-			var result = DataProcessing.GetAsInfo(TestData.TestInfoJson);
+			var result = DProcessing.GetAsInfo(TestData.TestInfoJson);
 
 			Assert.IsNotNull(result);
 		}
@@ -40,7 +42,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public void B_GetAsInfo_Correct_Value()
 		{
-			var result = DataProcessing.GetAsInfo(TestData.TestInfoJson);
+			var result = DProcessing.GetAsInfo(TestData.TestInfoJson);
 			var expectedResult = TestData.ValidFolderInfo;
 
 			Assert.IsNotNull(result);
@@ -57,7 +59,7 @@ namespace CompressedArchiveComparisonTests
 		[DataRow("BadData")]
 		public void B_GetAsInfo_Bad_Data_Handled(string testData)
 		{
-			var result = DataProcessing.GetAsInfo(testData);
+			var result = DProcessing.GetAsInfo(testData);
 			var expectedResult = TestData.DefaultInfo_Result;
 
 			Assert.IsNotNull(result);
@@ -71,7 +73,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public void C_IsValidInfo_IsTrue()
 		{
-			var result = DataProcessing.IsValidInfo(TestData.ValidFolderInfo);
+			var result = DProcessing.IsValidInfo(TestData.ValidFolderInfo);
 
 			Assert.IsTrue(result);
 		}
@@ -79,7 +81,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public void C_IsValidInfo_Empty_Handled()
 		{
-			var result = DataProcessing.IsValidInfo(TestData.EmptyFolderInfo);
+			var result = DProcessing.IsValidInfo(TestData.EmptyFolderInfo);
 
 			Assert.IsFalse(result);
 		}
@@ -87,7 +89,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public void D_GetCompressedFilesList_Correct_Value()
 		{
-			var result = DataProcessing.GetCompressedFileList(TestData.ValidFolderInfo);
+			var result = DProcessing.GetCompressedFileList(TestData.ValidFolderInfo);
 			var expectedResult = TestData.CompressedSourceUnFiltered_Result;
 
 			Assert.IsNotNull(result);
@@ -97,7 +99,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public void D_GetCompressedFilesList_Empty_Data_Handled()
 		{
-			var result = DataProcessing.GetCompressedFileList(TestData.EmptyFolderInfo);
+			var result = DProcessing.GetCompressedFileList(TestData.EmptyFolderInfo);
 
 			Assert.IsNotNull(result);
 			Assert.IsFalse(result.Any());
@@ -106,7 +108,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public void D_GetCompressedFilesList_Bad_Data_Handled()
 		{
-			var result = DataProcessing.GetCompressedFileList(TestData.BadFolderInfo);
+			var result = DProcessing.GetCompressedFileList(TestData.BadFolderInfo);
 
 			Assert.IsNotNull(result);
 			Assert.IsFalse(result.Any());
@@ -115,7 +117,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public void D_GetCompressedOfType_Correct_Value()
 		{
-			var result = DataProcessing.GetCompressedOfType(TestData.ValidFolderInfo, "*.rar");
+			var result = DProcessing.GetCompressedOfType(TestData.ValidFolderInfo, "*.rar");
 			var expectedResult = "SourceDir\\TestRar.rar";
 			var resultFlattened = result.FlattenToString("");
 
@@ -126,7 +128,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public async Task E_GetExclusionFileText_Correct_Value()
 		{
-			var result = await DataProcessing.GetExclusionFileText(TestData.TestDirInfo);
+			var result = await DProcessing.GetExclusionFileText(TestData.TestDirInfo);
 			var expectedResult = TestData.ExclusionFileList.FlattenToString(Environment.NewLine);
 
 			Assert.IsNotNull(result);
@@ -140,7 +142,7 @@ namespace CompressedArchiveComparisonTests
 		public async Task E_GetExclusionFileText_Empty_File(string testData)
 		{
 			var testInfo = new ConfigurationInfo() { ExclusionsFileName = testData };
-			var result = await DataProcessing.GetExclusionFileText(testInfo);
+			var result = await DProcessing.GetExclusionFileText(testInfo);
 			var expectedResult = "";
 
 			Assert.IsNotNull(result);
@@ -150,7 +152,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public async Task F_ReadFileData_Correct_Value()
 		{
-			var result = await DataProcessing.ReadFileData(TestData.TestDirInfo.ExclusionsFileName);
+			var result = await DProcessing.ReadFileData(TestData.TestDirInfo.ExclusionsFileName);
 			var expectedResult = TestData.ExclusionFileList.FlattenToString(Environment.NewLine);
 
 			Assert.IsNotNull(result);
@@ -163,7 +165,7 @@ namespace CompressedArchiveComparisonTests
 		[DataRow("BadFileName.bat")]
 		public async Task F_ReadFileData_Invalid(string testData)
 		{
-			var result = await DataProcessing.ReadFileData(testData);
+			var result = await DProcessing.ReadFileData(testData);
 			var expectedResult = "";
 
 			Assert.IsNotNull(result);
@@ -174,7 +176,7 @@ namespace CompressedArchiveComparisonTests
 		public void G_ParseExclusionFileText_Correct_Value()
 		{
 			var flattenedData = TestData.ExclusionFileList.FlattenToString(Environment.NewLine);
-			var result = DataProcessing.ParseExclusionFileText(flattenedData, Environment.NewLine);
+			var result = DProcessing.ParseExclusionFileText(flattenedData, Environment.NewLine);
 			var expectedResult = TestData.ExclusionFileList;
 
 			Assert.IsNotNull(result);
@@ -186,7 +188,7 @@ namespace CompressedArchiveComparisonTests
 		[DataRow("")]
 		public void G_ParseExclusionFileText_Bad_Data(string testData)
 		{
-			var result = DataProcessing.ParseExclusionFileText(testData, Environment.NewLine);
+			var result = DProcessing.ParseExclusionFileText(testData, Environment.NewLine);
 
 			Assert.IsNotNull(result);
 			Assert.IsFalse(result.Any());
@@ -200,7 +202,7 @@ namespace CompressedArchiveComparisonTests
 		public void G_ParseExclusionFileText_Separator_Correct_Value(string testData)
 		{
 			var testText = TestData.ExclusionFileList.FlattenToString(testData);
-			var result = DataProcessing.ParseExclusionFileText(testText, testData);
+			var result = DProcessing.ParseExclusionFileText(testText, testData);
 			var expectedResult = TestData.ExclusionFileList;
 
 			Assert.IsNotNull(result);
@@ -211,7 +213,7 @@ namespace CompressedArchiveComparisonTests
 		public void G_ParseExclusionFileText_Separator_blank()
 		{
 			var testText = TestData.ExclusionFileList.FlattenToString(Environment.NewLine);
-			var result = DataProcessing.ParseExclusionFileText(testText, "");
+			var result = DProcessing.ParseExclusionFileText(testText, "");
 			var expectedResult = TestData.ExclusionFileList;
 
 			Assert.IsNotNull(result);
@@ -221,7 +223,7 @@ namespace CompressedArchiveComparisonTests
 		[TestMethod]
 		public void H_FilterSourceList_Correct_Value()
 		{
-			var result = DataProcessing.FilterSourceList(TestData.CompressedSourceUnFiltered_Result, TestData.ExclusionFileList);
+			var result = DProcessing.FilterSourceList(TestData.CompressedSourceUnFiltered_Result, TestData.ExclusionFileList);
 			var expectedResult = TestData.FilteredSourceList;
 
 			Assert.IsNotNull(result);
