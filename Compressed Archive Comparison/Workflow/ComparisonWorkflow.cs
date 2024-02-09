@@ -2,7 +2,7 @@
 
 namespace CompressedArchiveComparison.Workflow
 {
-	public class ComparisonWorkflow(IWorkflowActions workflow) : IComparisonWorkflow
+	public class ComparisonWorkflow(IExceptionList exceptionList, IWorkflowActions workflow) : IComparisonWorkflow
 	{
 		private static readonly string CW = "ComparisonWorkflow";
 		private readonly object _canDisplayLock = new();
@@ -26,7 +26,7 @@ namespace CompressedArchiveComparison.Workflow
 			}
 			catch (Exception ex)
 			{
-				ExceptionList.Add(ex, "Error trying to load the Config", $"{CW}\\StartWorkflow", [.. args]);
+				exceptionList.Add(ex, "Error trying to load the Config", $"{CW}\\StartWorkflow", [.. args]);
 			}
 		}
 
@@ -57,7 +57,7 @@ namespace CompressedArchiveComparison.Workflow
 					break;
 				default:
 					var currentState = Enum.GetName(typeof(StateFlow), CurrentState);
-					ExceptionList.Add(new Exception("Invalid Call"), $"Invalid call to Next based on Current State of {currentState}", $"{CW}\\Next");
+					exceptionList.Add(new Exception("Invalid Call"), $"Invalid call to Next based on Current State of {currentState}", $"{CW}\\Next");
 					break;
 			}
 		}
@@ -89,7 +89,7 @@ namespace CompressedArchiveComparison.Workflow
 			}
 			catch(Exception ex)
 			{
-				ExceptionList.Add(ex, $"Something went wrong while loading the initial data", $"{CW}\\LoadInitialData");
+				exceptionList.Add(ex, $"Something went wrong while loading the initial data", $"{CW}\\LoadInitialData");
 			}
 		}
 

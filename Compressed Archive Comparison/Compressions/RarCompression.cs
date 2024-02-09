@@ -1,8 +1,9 @@
 ﻿using CompressedArchiveComparison.CompressedReadonlyReaders;
+using CompressedArchiveComparison.Exceptions;
 
 namespace CompressedArchiveComparison.Compressions
 {
-	public class RarCompression() : AbstractCompressionBase(new RarReader()), ICompression
-	{
-	}
+    public class RarCompression(IExceptionList el) : AbstractCompressionBase(new RarReader(el)), ICompression
+    {
+    }
 }

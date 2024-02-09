@@ -4,6 +4,8 @@ using CompressedArchiveComparison.CompressedReadonlyReaders;
 using CompressedArchiveComparison.Components;
 using Microsoft.Extensions.Hosting;
 using CompressedArchiveComparison.Workflow;
+using CompressedArchiveComparison.Exceptions;
+using CompressedArchiveComparison.Factories;
 
 namespace CompressedArchiveComparisonTests
 {
@@ -14,10 +16,14 @@ namespace CompressedArchiveComparisonTests
 		[DataRow(typeof(IComparisonWorkflow), 1)]
 		[DataRow(typeof(IWorkflowActions), 1)]
 		[DataRow(typeof(IInfo), 1)]
-		[DataRow(typeof(ICompressedReader), 3)]
-		public void A_CreateHostBuilder_Type_Valid(Type testData, int count)
+        [DataRow(typeof(ICompressedReader), 3)]
+        [DataRow(typeof(DataProcessing), 1)]
+        [DataRow(typeof(CompressionResolver), 1)]
+        [DataRow(typeof(IExceptionList), 1)]
+        [DataRow(typeof(ICompressionFactory), 1)]
+        public void A_CreateHostBuilder_Type_Valid(Type testData, int count)
 		{
-			var host = CompressionHostBuilder.CreateHostBuilder().Build();
+			var host = CompressionHostBuilder.CreateHostBuilder(true).Build();
 
 			Assert.IsNotNull(host);
 			var resultInstance = host.Services.GetServices(testData);
@@ -32,7 +38,7 @@ namespace CompressedArchiveComparisonTests
 		[DataRow(".zip", "ZipCompression")]
 		public void A_CreateHostBuilder_CompressionResolver_Valid(string testData, string expectedResult)
 		{
-			var host = CompressionHostBuilder.CreateHostBuilder().Build();
+			var host = CompressionHostBuilder.CreateHostBuilder(true).Build();
 
 			Assert.IsNotNull(host);
 			var resultInstance = host.Services.GetService<CompressionResolver>();
@@ -45,14 +51,18 @@ namespace CompressedArchiveComparisonTests
 		}
 
 		[TestMethod]
-		[DataRow(typeof(IComparisonWorkflow), 1)]
-		[DataRow(typeof(IWorkflowActions), 1)]
-		[DataRow(typeof(IInfo), 1)]
-		[DataRow(typeof(ICompressedReader), 3)]
-		public void B_RegisterCompressionServices_Type_Valid(Type testData, int count)
+        [DataRow(typeof(IComparisonWorkflow), 1)]
+        [DataRow(typeof(IWorkflowActions), 1)]
+        [DataRow(typeof(IInfo), 1)]
+        [DataRow(typeof(ICompressedReader), 3)]
+        [DataRow(typeof(DataProcessing), 1)]
+        [DataRow(typeof(CompressionResolver), 1)]
+        [DataRow(typeof(IExceptionList), 1)]
+        [DataRow(typeof(ICompressionFactory), 1)]
+        public void B_RegisterCompressionServices_Type_Valid(Type testData, int count)
 		{
 			var builder = Host.CreateApplicationBuilder();
-			_ = builder.Services.RegisterCompressionServices();
+			_ = builder.Services.RegisterCompressionServices(true);
 			var host = builder.Build();
 
 			Assert.IsNotNull(host);
@@ -69,7 +79,7 @@ namespace CompressedArchiveComparisonTests
 		public void B_RegisterCompressionServices_CompressionResolver_Valid(string testData, string expectedResult)
 		{
 			var builder = Host.CreateApplicationBuilder();
-			var services = builder.Services.RegisterCompressionServices();
+			var services = builder.Services.RegisterCompressionServices(true);
 			var host = builder.Build();
 
 			Assert.IsNotNull(host);
